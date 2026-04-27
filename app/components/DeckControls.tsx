@@ -24,7 +24,7 @@ export default function DeckControls({ mode, onModeChange, onShuffle, onRestart 
           <button
             key={m.value}
             onClick={() => onModeChange(m.value)}
-            className={`px-5 py-2.5 text-sm font-medium transition-colors ${
+            className={`px-5 py-2.5 min-h-[44px] text-sm font-medium transition-colors touch-manipulation ${
               mode === m.value
                 ? "bg-white text-gray-900"
                 : "bg-white/10 text-white hover:bg-white/20"
@@ -39,13 +39,13 @@ export default function DeckControls({ mode, onModeChange, onShuffle, onRestart 
       <div className="flex gap-3">
         <button
           onClick={onShuffle}
-          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors border border-white/10"
+          className="px-4 py-2 min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-sm font-medium transition-colors border border-white/10 touch-manipulation"
         >
           Shuffle
         </button>
         <button
           onClick={onRestart}
-          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors border border-white/10"
+          className="px-4 py-2 min-h-[44px] rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-sm font-medium transition-colors border border-white/10 touch-manipulation"
         >
           Restart
         </button>
