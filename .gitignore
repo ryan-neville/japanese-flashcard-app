@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# audio generation: intermediates only. The clips under public/audio/ and
+# app/data/audio-manifest.ts are generated but committed — they are what makes
+# pronunciation work in browsers with no Japanese voice.
+/scripts/phrases.json
+/public/audio/**/*.partial
+
 # debug
 npm-debug.log*
 yarn-debug.log*
