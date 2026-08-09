@@ -383,6 +383,8 @@ export const hotel = phraseDeck("hotel", [
   ["チェックアウト", "Chekku auto", "Check-out"],
   ["鍵", "Kagi", "Key"],
   ["荷物", "Nimotsu", "Luggage"],
+  ["荷物、預かってもらえますか?", "Nimotsu, azukatte moraemasu ka?", "Could you keep my luggage for me?"],
+  ["午後3時まで荷物を預かってもらえますか?", "Gogo sanji made nimotsu o azukatte moraemasu ka?", "Can you keep my luggage until 3pm?"],
   ["朝食はついていますか?", "Choushoku wa tsuite imasu ka?", "Is breakfast included?"],
   ["温泉 / お風呂", "Onsen / Ofuro", "Hot spring / bath"],
   ["タオル", "Taoru", "Towel"],
