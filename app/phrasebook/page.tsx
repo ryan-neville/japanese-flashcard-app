@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import AppLink from "../components/AppLink";
 import PhraseList from "../components/PhraseList";
 
 export const metadata: Metadata = {
@@ -15,12 +15,12 @@ export default function PhrasebookPage() {
         <p className="text-white/50 text-sm">Japan Travel Phrasebook</p>
       </div>
 
-      <Link
-        href="/"
+      <AppLink
+        to="/"
         className="inline-flex items-center min-h-[44px] px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-sm font-medium transition-colors border border-white/10 touch-manipulation"
       >
         ← Flashcards
-      </Link>
+      </AppLink>
 
       <PhraseList />
     </main>
