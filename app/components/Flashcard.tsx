@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { Flashcard as FlashcardType } from "../data/flashcards";
+import { deckById, type Flashcard as FlashcardType } from "../data/flashcards";
 
 interface Props {
   card: FlashcardType;
@@ -57,8 +57,23 @@ export default function Flashcard({ card, onNext, onPrev, current, total }: Prop
     }
   };
 
-  const setLabel = card.set === "hiragana" ? "Hiragana" : "Katakana";
-  const setColor = card.set === "hiragana" ? "text-rose-400" : "text-sky-400";
+  const deck = deckById.get(card.set);
+  const setLabel = deck?.label ?? card.set;
+  const setColor = deck?.color ?? "text-white/60";
+
+  // Phrase cards carry an English meaning: the front shows the Japanese with its
+  // romaji reading, and the flip side reveals the translation. Kana cards have no
+  // English, so the front is the character alone and the flip reveals the romaji.
+  const isPhrase = Boolean(card.english);
+  // Long phrases need to shrink to fit the fixed-size card face.
+  const frontSize =
+    card.japanese.length > 16
+      ? "text-3xl sm:text-4xl"
+      : card.japanese.length > 8
+        ? "text-4xl sm:text-5xl"
+        : isPhrase
+          ? "text-6xl sm:text-7xl"
+          : "text-8xl sm:text-9xl";
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -90,9 +105,14 @@ export default function Flashcard({ card, onNext, onPrev, current, total }: Prop
             <span className={`text-xs font-semibold tracking-widest uppercase mb-4 ${setColor}`}>
               {setLabel}
             </span>
-            <span className="text-8xl sm:text-9xl font-light text-white leading-none">
+            <span className={`${frontSize} font-light text-white leading-tight text-center px-6`}>
               {card.japanese}
             </span>
+            {isPhrase && (
+              <span className="mt-4 px-6 text-center text-lg sm:text-xl font-medium text-white/70">
+                {card.romaji}
+              </span>
+            )}
             <span className="text-xs text-white/40 mt-6">tap to reveal</span>
           </div>
 
@@ -108,12 +128,20 @@ export default function Flashcard({ card, onNext, onPrev, current, total }: Prop
             <span className={`text-xs font-semibold tracking-widest uppercase mb-4 ${setColor}`}>
               {setLabel}
             </span>
-            <span className="text-6xl sm:text-7xl font-light text-white mb-4 leading-none">
-              {card.japanese}
-            </span>
-            <span className="text-4xl sm:text-5xl font-bold text-white/90 tracking-widest">
-              {card.romaji}
-            </span>
+            {isPhrase ? (
+              <span className="px-6 text-center text-3xl sm:text-4xl font-semibold text-white leading-snug">
+                {card.english}
+              </span>
+            ) : (
+              <>
+                <span className="text-6xl sm:text-7xl font-light text-white mb-4 leading-none">
+                  {card.japanese}
+                </span>
+                <span className="text-4xl sm:text-5xl font-bold text-white/90 tracking-widest">
+                  {card.romaji}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

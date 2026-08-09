@@ -1,6 +1,9 @@
 "use client";
 
-type Mode = "hiragana" | "katakana" | "both";
+import { decks, deckGroups, type CardSet, type DeckGroup } from "../data/flashcards";
+
+/** A deck id, plus the virtual deck that merges both kana sets. */
+export type Mode = CardSet | "kana-both";
 
 interface Props {
   mode: Mode;
@@ -9,31 +12,37 @@ interface Props {
   onRestart: () => void;
 }
 
-const modes: { value: Mode; label: string }[] = [
-  { value: "hiragana", label: "Hiragana" },
-  { value: "katakana", label: "Katakana" },
-  { value: "both", label: "Both" },
-];
+const optionsByGroup: { group: DeckGroup; options: { value: Mode; label: string }[] }[] =
+  deckGroups.map((group) => ({
+    group,
+    options: [
+      ...decks
+        .filter((d) => d.group === group)
+        .map((d) => ({ value: d.id as Mode, label: d.label })),
+      ...(group === "Kana" ? [{ value: "kana-both" as Mode, label: "Both kana" }] : []),
+    ],
+  }));
 
 export default function DeckControls({ mode, onModeChange, onShuffle, onRestart }: Props) {
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Mode selector */}
-      <div className="flex rounded-xl overflow-hidden border border-white/20">
-        {modes.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => onModeChange(m.value)}
-            className={`px-5 py-2.5 min-h-[44px] text-sm font-medium transition-colors touch-manipulation ${
-              mode === m.value
-                ? "bg-white text-gray-900"
-                : "bg-white/10 text-white hover:bg-white/20"
-            }`}
-          >
-            {m.label}
-          </button>
+      {/* Deck selector */}
+      <select
+        value={mode}
+        onChange={(e) => onModeChange(e.target.value as Mode)}
+        className="min-h-[44px] w-72 sm:w-96 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 touch-manipulation"
+        aria-label="Choose a deck"
+      >
+        {optionsByGroup.map(({ group, options }) => (
+          <optgroup key={group} label={group} className="text-gray-900">
+            {options.map((o) => (
+              <option key={o.value} value={o.value} className="text-gray-900">
+                {o.label}
+              </option>
+            ))}
+          </optgroup>
         ))}
-      </div>
+      </select>
 
       {/* Actions */}
       <div className="flex gap-3">
