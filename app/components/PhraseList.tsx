@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { decks, type CardSet } from "../data/flashcards";
+import { cardKey } from "../lib/progress";
+import SpeakButton from "./SpeakButton";
 
 /** The phrasebook decks, in registry order — the sections offered in the menu. */
 const sections = decks.filter((d) => d.group === "Travel Phrasebook");
@@ -56,17 +58,24 @@ export default function PhraseList() {
             {deck.cards.map((card, i) => (
               <li
                 key={`${card.japanese}-${i}`}
-                className="flex flex-col gap-1 border-b border-white/10 px-4 py-3 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+                className="flex items-center gap-3 border-b border-white/10 px-4 py-3 last:border-b-0"
               >
-                <div className="min-w-0">
-                  <p className="text-xl text-white font-light leading-snug break-words">
-                    {card.japanese}
+                <div className="min-w-0 flex-1 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+                  <div className="min-w-0">
+                    <p className="text-xl text-white font-light leading-snug break-words">
+                      {card.japanese}
+                    </p>
+                    <p className="text-sm text-white/60 break-words">{card.romaji}</p>
+                  </div>
+                  <p className="text-sm sm:text-base text-white/80 break-words sm:shrink-0 sm:max-w-[45%] sm:text-right">
+                    {card.english}
                   </p>
-                  <p className="text-sm text-white/60 break-words">{card.romaji}</p>
                 </div>
-                <p className="text-sm sm:text-base text-white/80 break-words sm:shrink-0 sm:max-w-[45%] sm:text-right">
-                  {card.english}
-                </p>
+                <SpeakButton
+                  text={card.japanese}
+                  romaji={card.romaji}
+                  phraseKey={cardKey(card)}
+                />
               </li>
             ))}
           </ul>
