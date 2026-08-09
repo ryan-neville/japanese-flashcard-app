@@ -1,21 +1,32 @@
-import { deckById, type CardSet } from "../data/flashcards";
+import { deckById, type CardSet, type Flashcard } from "../data/flashcards";
 import type { Mode } from "../components/DeckControls";
 
 const STORAGE_KEY = "japanese-flashcards:progress";
 
 /**
  * The slice of state that survives a refresh: the chosen deck, the position in
- * it, and the shuffle order. The order is stored as a permutation of the deck's
- * indices — without it a reload would reshuffle and the saved position would
- * land on an unrelated card.
+ * it, the shuffle order, and the cards hidden from rotation. The order is stored
+ * as a permutation of the deck's indices — without it a reload would reshuffle
+ * and the saved position would land on an unrelated card.
  */
 export interface Progress {
   mode: Mode;
   index: number;
   order: number[] | null;
+  /** `cardKey` of every hidden card, across all decks. */
+  hidden: string[];
 }
 
-export const DEFAULT_PROGRESS: Progress = { mode: "hiragana", index: 0, order: null };
+export const DEFAULT_PROGRESS: Progress = { mode: "hiragana", index: 0, order: null, hidden: [] };
+
+/**
+ * Stable identity for a card. Positions shift when a deck is edited, so hidden
+ * cards are stored by content instead: no two cards share a set and a Japanese
+ * form, which makes the pair a durable key.
+ */
+export function cardKey(card: Flashcard): string {
+  return `${card.set}|${card.japanese}`;
+}
 
 function isMode(value: unknown): value is Mode {
   return value === "kana-both" || (typeof value === "string" && deckById.has(value as CardSet));
@@ -30,11 +41,12 @@ function parse(raw: string): Progress {
     return DEFAULT_PROGRESS;
   }
   if (typeof parsed !== "object" || parsed === null) return DEFAULT_PROGRESS;
-  const { mode, index, order } = parsed as Record<string, unknown>;
+  const { mode, index, order, hidden } = parsed as Record<string, unknown>;
   return {
     mode: isMode(mode) ? mode : DEFAULT_PROGRESS.mode,
     index: Number.isInteger(index) && (index as number) >= 0 ? (index as number) : 0,
     order: Array.isArray(order) && order.every((n) => Number.isInteger(n)) ? (order as number[]) : null,
+    hidden: Array.isArray(hidden) ? hidden.filter((k): k is string => typeof k === "string") : [],
   };
 }
 
@@ -77,6 +89,16 @@ export function saveProgress(patch: Partial<Progress>): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {
     // Storage full or blocked: progress just won't survive the refresh.
+  }
+  for (const listener of listeners) listener();
+}
+
+/** Forgets every saved preference — deck, position, shuffle order and hidden cards. */
+export function clearProgress(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage blocked: there was nothing persisted to clear.
   }
   for (const listener of listeners) listener();
 }
