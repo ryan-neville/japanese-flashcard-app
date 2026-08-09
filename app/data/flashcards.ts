@@ -388,6 +388,8 @@ export const hotel = phraseDeck("hotel", [
   ["朝食はついていますか?", "Choushoku wa tsuite imasu ka?", "Is breakfast included?"],
   ["温泉 / お風呂", "Onsen / Ofuro", "Hot spring / bath"],
   ["タオル", "Taoru", "Towel"],
+  ["すみません、わかりません。もう一度お願いします", "Sumimasen, wakarimasen. Mou ichido onegaishimasu", "Sorry, I don't understand. Once more, please"],
+  ["すみません、もう一度これに向かって話していただけますか?", "Sumimasen, mou ichido kore ni mukatte hanashite itadakemasu ka?", "Could you say that again into this?"],
 ]);
 
 export const emergencies = phraseDeck("emergencies", [
