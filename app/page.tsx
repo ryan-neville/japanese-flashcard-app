@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { hiragana, katakana } from "./data/flashcards";
+import { hiragana, katakana, deckById } from "./data/flashcards";
 import Flashcard from "./components/Flashcard";
-import DeckControls from "./components/DeckControls";
-
-type Mode = "hiragana" | "katakana" | "both";
+import DeckControls, { type Mode } from "./components/DeckControls";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -23,9 +21,8 @@ export default function Home() {
   const [seed, setSeed] = useState(0);
 
   const baseCards = useMemo(() => {
-    if (mode === "hiragana") return hiragana;
-    if (mode === "katakana") return katakana;
-    return [...hiragana, ...katakana];
+    if (mode === "kana-both") return [...hiragana, ...katakana];
+    return deckById.get(mode)?.cards ?? [];
   }, [mode]);
 
   const deck = useMemo(() => {
@@ -59,7 +56,11 @@ export default function Home() {
         <h1 className="text-3xl font-bold text-white tracking-tight mb-1">
           日本語 Flashcards
         </h1>
-        <p className="text-white/50 text-sm">Japanese kana practice</p>
+        <p className="text-white/50 text-sm">
+          {mode === "kana-both"
+            ? "Japanese kana practice"
+            : (deckById.get(mode)?.subtitle ?? "Japanese practice")}
+        </p>
       </div>
 
       <DeckControls
