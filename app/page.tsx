@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
 import { hiragana, katakana, deckById } from "./data/flashcards";
 import Flashcard from "./components/Flashcard";
 import DeckControls, { type Mode } from "./components/DeckControls";
+import { getServerSnapshot, getSnapshot, saveProgress, subscribe } from "./lib/progress";
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
+/** A random permutation of `0..length - 1`. */
+function shuffledOrder(length: number): number[] {
+  const a = Array.from({ length }, (_, i) => i);
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
@@ -15,9 +17,9 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function Home() {
-  const [mode, setMode] = useState<Mode>("hiragana");
-  const [shuffled, setShuffled] = useState(false);
-  const [index, setIndex] = useState(0);
+  // Deck, position and shuffle order live in localStorage so a refresh picks up
+  // where the last one left off.
+  const { mode, index, order } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [seed, setSeed] = useState(0);
 
   const baseCards = useMemo(() => {
@@ -25,30 +27,32 @@ export default function Home() {
     return deckById.get(mode)?.cards ?? [];
   }, [mode]);
 
+  // A stored order can outlive the deck it was built for, so fall back to the
+  // natural order unless it still lines up with the cards.
   const deck = useMemo(() => {
-    void seed;
-    return shuffled ? shuffle(baseCards) : baseCards;
-  }, [baseCards, shuffled, seed]);
+    if (!order || order.length !== baseCards.length) return baseCards;
+    const reordered = order.map((i) => baseCards[i]);
+    return reordered.every(Boolean) ? reordered : baseCards;
+  }, [baseCards, order]);
 
   const handleModeChange = useCallback((m: Mode) => {
-    setMode(m);
-    setIndex(0);
+    saveProgress({ mode: m, index: 0, order: null });
     setSeed((s) => s + 1);
   }, []);
 
   const handleShuffle = useCallback(() => {
-    setShuffled(true);
-    setIndex(0);
+    saveProgress({ index: 0, order: shuffledOrder(baseCards.length) });
     setSeed((s) => s + 1);
-  }, []);
+  }, [baseCards.length]);
 
   const handleRestart = useCallback(() => {
-    setShuffled(false);
-    setIndex(0);
+    saveProgress({ index: 0, order: null });
     setSeed((s) => s + 1);
   }, []);
 
-  const card = deck[index];
+  // A restored index can point past a deck that has since shrunk.
+  const cardIndex = Math.min(index, Math.max(deck.length - 1, 0));
+  const card = deck[cardIndex];
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-10 px-4 py-12 bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
@@ -72,16 +76,16 @@ export default function Home() {
 
       {card && (
         <Flashcard
-          key={`${card.japanese}-${index}-${seed}`}
+          key={`${card.japanese}-${cardIndex}-${seed}`}
           card={card}
-          current={index + 1}
+          current={cardIndex + 1}
           total={deck.length}
-          onNext={() => setIndex((i) => Math.min(i + 1, deck.length - 1))}
-          onPrev={() => setIndex((i) => Math.max(i - 1, 0))}
+          onNext={() => saveProgress({ index: Math.min(cardIndex + 1, deck.length - 1) })}
+          onPrev={() => saveProgress({ index: Math.max(cardIndex - 1, 0) })}
         />
       )}
 
-      {index === deck.length - 1 && (
+      {cardIndex === deck.length - 1 && (
         <div className="text-white/60 text-sm animate-pulse">
           Deck complete! Shuffle or switch sets to continue.
         </div>
