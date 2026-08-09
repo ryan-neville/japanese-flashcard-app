@@ -1,6 +1,6 @@
 "use client";
 
-import { speakJapanese, useSpeech } from "../lib/speech";
+import { hasClip, speakJapanese, useSpeech } from "../lib/speech";
 
 interface Props {
   /** The Japanese to pronounce. */
@@ -12,19 +12,22 @@ interface Props {
 }
 
 /**
- * Plays a phrase aloud in Japanese. Renders nothing at all where the browser
- * has no speech synthesis, so the row keeps its layout rather than showing a
- * control that could never work.
+ * Plays a phrase aloud in Japanese. Cards carry a bundled clip, which plays in
+ * any engine; only text without one depends on the browser having a Japanese
+ * voice, and there the button renders nothing rather than showing a control
+ * that could never work.
  */
 export default function SpeakButton({ text, phraseKey, romaji }: Props) {
   const { status, speakingKey } = useSpeech();
 
-  // "checking" is also the server's answer, so both sides render the same markup
-  // until the browser has been probed.
-  if (status === "checking" || status === "unsupported") return null;
+  // A clip needs no voice and no probing, so the button renders identically on
+  // the server and the client. Without one we wait for the probe — "checking"
+  // is the server's answer too, so both sides still match.
+  const clip = hasClip(text);
+  if (!clip && (status === "checking" || status === "unsupported")) return null;
 
   const speaking = speakingKey === phraseKey;
-  const unavailable = status === "no-voice";
+  const unavailable = !clip && status === "no-voice";
   const spoken = romaji ? `${text}, ${romaji}` : text;
 
   return (

@@ -64,6 +64,23 @@ app/
 
 Decks live in [`app/data/flashcards.ts`](app/data/flashcards.ts). Add an id to the `PhraseSet` union, build the cards with the `phraseDeck()` helper, then register it in the `decks` array. The UI reads from that registry, so no component changes are needed.
 
+Then run `npm run audio` to render clips for the new cards — see below.
+
+### Pronunciation audio
+
+Every card has a pre-rendered clip in `public/audio/ja/`, looked up through the generated `app/data/audio-manifest.ts`. These are committed on purpose.
+
+They exist because the Web Speech API cannot carry this on its own: **Firefox ships no voices of its own** and can only speak with one installed in the OS, so a machine without a Japanese speech pack has no Japanese voice at all. On Windows it is worse than it sounds — the packs install under the `Speech_OneCore` registry hive, which Firefox does not read. Chrome and Edge hide the problem by bundling their own voices, which is why the feature can look fine in testing and be silent in Firefox. The clips play identically in all four engines and need no OS support. Web Speech is kept only as a fallback for text with no clip.
+
+To regenerate after adding or editing cards:
+
+```bash
+pip install edge-tts   # once
+npm run audio          # renders only the clips that are missing
+```
+
+The generator is a network call to Microsoft's TTS endpoint at authoring time; the app itself never talks to a third party. Pass `--force` to `scripts/generate-audio.py` to re-render everything, which is needed if you change `VOICE`.
+
 ## Scripts
 
 | Command | Description |
@@ -73,6 +90,7 @@ Decks live in [`app/data/flashcards.ts`](app/data/flashcards.ts). Add an id to t
 | `npm run build` | Build for production |
 | `npm start` | Start production server |
 | `npm run lint` | Run ESLint |
+| `npm run audio` | Render any missing pronunciation clips and rewrite the audio manifest |
 
 ---
 
