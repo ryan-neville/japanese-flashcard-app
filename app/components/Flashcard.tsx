@@ -2,6 +2,9 @@
 
 import { useRef, useState } from "react";
 import { deckById, type Flashcard as FlashcardType } from "../data/flashcards";
+import { cardKey } from "../lib/progress";
+import { stop as stopSpeech } from "../lib/speech";
+import SpeakButton from "./SpeakButton";
 
 interface Props {
   card: FlashcardType;
@@ -19,8 +22,13 @@ const FLIP_MS = 500;
 // honouring `backface-visibility: hidden`, so the front face shows through the
 // back mirrored. Hide the away-facing side explicitly, swapped at the halfway
 // point of the rotation so the change is invisible mid-flip.
+// A face at `opacity: 0` still takes clicks, so the away-facing side is also
+// made click-through — otherwise its speak button would swallow taps aimed at
+// the face on show. Its `inert` twin below covers keyboard and screen readers;
+// this stays as the fallback for engines predating `inert`.
 const faceVisibility = (visible: boolean): React.CSSProperties => ({
   opacity: visible ? 1 : 0,
+  pointerEvents: visible ? "auto" : "none",
   transition: `opacity 0s linear ${FLIP_MS / 2}ms`,
 });
 
@@ -42,12 +50,16 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
 
   const handleFlip = () => setFlipped((f) => !f);
 
+  // Leaving a card silences it: the audio would otherwise run on over whatever
+  // card replaced it.
   const handleNext = () => {
+    stopSpeech();
     setFlipped(false);
     onNext();
   };
 
   const handlePrev = () => {
+    stopSpeech();
     setFlipped(false);
     onPrev();
   };
@@ -83,6 +95,15 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
   const deck = deckById.get(card.set);
   const setLabel = deck?.label ?? card.set;
   const setColor = deck?.color ?? "text-white/60";
+
+  // Both faces carry the same control, so the card can be heard whichever way
+  // round it is. They are two elements, but one shared key: the pair is one
+  // card's audio, and only the face on show can be pressed.
+  const speak = (
+    <div className="absolute top-2 right-2">
+      <SpeakButton text={card.japanese} romaji={card.romaji} phraseKey={cardKey(card)} />
+    </div>
+  );
 
   // Phrase cards carry an English meaning: the front shows the Japanese with its
   // romaji reading, and the flip side reveals the translation. Kana cards have no
@@ -126,6 +147,9 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
           {/* Front */}
           <div
             className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl bg-white/10 border border-white/20 shadow-2xl backdrop-blur-sm"
+            // Keeps the turned-away speak button out of the tab order and out of
+            // the accessibility tree — an invisible face is not a reachable one.
+            inert={flipped}
             style={{
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
@@ -134,6 +158,7 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
               ...faceVisibility(!flipped),
             } as React.CSSProperties}
           >
+            {speak}
             <span className={`text-xs font-semibold tracking-widest uppercase mb-4 ${setColor}`}>
               {setLabel}
             </span>
@@ -154,6 +179,7 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
           {/* Back */}
           <div
             className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl bg-white/10 border border-white/20 shadow-2xl backdrop-blur-sm"
+            inert={!flipped}
             style={{
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
@@ -161,6 +187,7 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
               ...faceVisibility(flipped),
             } as React.CSSProperties}
           >
+            {speak}
             <span className={`text-xs font-semibold tracking-widest uppercase mb-4 ${setColor}`}>
               {setLabel}
             </span>
