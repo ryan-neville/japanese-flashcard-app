@@ -7,6 +7,8 @@ interface Props {
   card: FlashcardType;
   onNext: () => void;
   onPrev: () => void;
+  /** Drops this card out of the rotation until it is unhidden. */
+  onHide: () => void;
   current: number;
   total: number;
 }
@@ -32,7 +34,7 @@ function emWidth(text: string): number {
   return em;
 }
 
-export default function Flashcard({ card, onNext, onPrev, current, total }: Props) {
+export default function Flashcard({ card, onNext, onPrev, onHide, current, total }: Props) {
   const [flipped, setFlipped] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -203,6 +205,13 @@ export default function Flashcard({ card, onNext, onPrev, current, total }: Prop
           Next →
         </button>
       </div>
+
+      <button
+        onClick={onHide}
+        className="px-4 py-2 min-h-[44px] rounded-lg text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 text-sm font-medium transition-colors touch-manipulation"
+      >
+        Hide this card
+      </button>
     </div>
   );
 }

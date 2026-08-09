@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useCallback, useMemo, useSyncExternalStore } from "react";
-import { hiragana, katakana, deckById } from "./data/flashcards";
+import { hiragana, katakana, deckById, type Flashcard as FlashcardType } from "./data/flashcards";
 import AppLink from "./components/AppLink";
 import Flashcard from "./components/Flashcard";
+import HiddenCards from "./components/HiddenCards";
 import DeckControls, { type Mode } from "./components/DeckControls";
-import { getServerSnapshot, getSnapshot, saveProgress, subscribe } from "./lib/progress";
+import {
+  cardKey,
+  clearProgress,
+  getServerSnapshot,
+  getSnapshot,
+  saveProgress,
+  subscribe,
+} from "./lib/progress";
 
 /** A random permutation of `0..length - 1`. */
 function shuffledOrder(length: number): number[] {
@@ -20,7 +28,11 @@ function shuffledOrder(length: number): number[] {
 export default function Home() {
   // Deck, position and shuffle order live in localStorage so a refresh picks up
   // where the last one left off.
-  const { mode, index, order } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const { mode, index, order, hidden } = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
   const [seed, setSeed] = useState(0);
 
   const baseCards = useMemo(() => {
@@ -28,13 +40,54 @@ export default function Home() {
     return deckById.get(mode)?.cards ?? [];
   }, [mode]);
 
+  const hiddenKeys = useMemo(() => new Set(hidden), [hidden]);
+
   // A stored order can outlive the deck it was built for, so fall back to the
   // natural order unless it still lines up with the cards.
-  const deck = useMemo(() => {
+  const ordered = useMemo(() => {
     if (!order || order.length !== baseCards.length) return baseCards;
     const reordered = order.map((i) => baseCards[i]);
     return reordered.every(Boolean) ? reordered : baseCards;
   }, [baseCards, order]);
+
+  // Hidden cards drop out of the rotation but keep their place in `order`, so
+  // hiding and unhiding a card does not disturb the shuffle around it.
+  const deck = useMemo(
+    () => ordered.filter((c) => !hiddenKeys.has(cardKey(c))),
+    [ordered, hiddenKeys],
+  );
+
+  const hiddenInDeck = useMemo(
+    () => baseCards.filter((c) => hiddenKeys.has(cardKey(c))),
+    [baseCards, hiddenKeys],
+  );
+
+  const handleHide = useCallback(
+    (card: FlashcardType) => {
+      const key = cardKey(card);
+      if (hiddenKeys.has(key)) return;
+      saveProgress({ hidden: [...hidden, key] });
+    },
+    [hidden, hiddenKeys],
+  );
+
+  const handleUnhide = useCallback(
+    (card: FlashcardType) => {
+      const key = cardKey(card);
+      saveProgress({ hidden: hidden.filter((k) => k !== key) });
+    },
+    [hidden],
+  );
+
+  const handleUnhideDeck = useCallback(() => {
+    const deckKeys = new Set(baseCards.map(cardKey));
+    saveProgress({ hidden: hidden.filter((k) => !deckKeys.has(k)) });
+  }, [baseCards, hidden]);
+
+  const handleClear = useCallback(() => {
+    clearProgress();
+    setSeed((s) => s + 1);
+  }, []);
 
   const handleModeChange = useCallback((m: Mode) => {
     saveProgress({ mode: m, index: 0, order: null });
@@ -80,9 +133,10 @@ export default function Home() {
         onModeChange={handleModeChange}
         onShuffle={handleShuffle}
         onRestart={handleRestart}
+        onClear={handleClear}
       />
 
-      {card && (
+      {card ? (
         <Flashcard
           key={`${card.japanese}-${cardIndex}-${seed}`}
           card={card}
@@ -90,10 +144,22 @@ export default function Home() {
           total={deck.length}
           onNext={() => saveProgress({ index: Math.min(cardIndex + 1, deck.length - 1) })}
           onPrev={() => saveProgress({ index: Math.max(cardIndex - 1, 0) })}
+          onHide={() => handleHide(card)}
         />
+      ) : (
+        <p className="text-white/60 text-sm text-center max-w-xs">
+          Every card in this set is hidden. Unhide one below, or pick another set.
+        </p>
       )}
 
-      {cardIndex === deck.length - 1 && (
+      <HiddenCards
+        cards={hiddenInDeck}
+        otherCount={hidden.length - hiddenInDeck.length}
+        onUnhide={handleUnhide}
+        onUnhideAll={handleUnhideDeck}
+      />
+
+      {deck.length > 0 && cardIndex === deck.length - 1 && (
         <div className="text-white/60 text-sm animate-pulse">
           Deck complete! Shuffle or switch sets to continue.
         </div>
