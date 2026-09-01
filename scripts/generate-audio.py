@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -32,7 +33,8 @@ OUT_DIR = ROOT / "public" / "audio" / "ja"
 MANIFEST = ROOT / "app" / "data" / "audio-manifest.ts"
 
 # A clear, standard Tokyo-accent voice. Changing this needs --force, since
-# existing clips are keyed by text alone and would otherwise be left stale.
+# existing clips are keyed by what is said and not by who says it, and would
+# otherwise be left stale.
 VOICE = "ja-JP-NanamiNeural"
 
 # Matches the learner-friendly pace the Web Speech path uses (rate 0.85).
@@ -46,23 +48,72 @@ ATTEMPTS = 3
 # the manifest that ships to the browser small.
 STEM_LENGTH = 12
 
+# A run of underscores is a blank for the learner to fill in ("私は＿＿＿です"),
+# not something to sound out — read literally, the voice works through the run
+# one character at a time. A blank of any length, full-width or ASCII, is held
+# open as silence instead, leaving room to say the missing word.
+BLANK = re.compile(r"[＿_]+")
+BLANK_PAUSE = 2.0
+
+# One frame of digital silence in the format edge-tts returns (MPEG-2 Layer III,
+# 24 kHz, 48 kbps, mono): its own 4-byte frame header followed by an empty frame
+# body, which decodes to 576 silent samples. Building the pause out of frames the
+# voice already produces keeps concatenation valid and this script's only
+# dependency `edge-tts` — there is no encoder to install.
+SILENT_FRAME = bytes.fromhex("fff364c4") + bytes(140)
+FRAME_SECONDS = 576 / 24_000
+
+
+def silence(seconds: float) -> bytes:
+    """A run of silent frames lasting about `seconds`, to the nearest frame."""
+    return SILENT_FRAME * round(seconds / FRAME_SECONDS)
+
+
+def speech_parts(text: str) -> list[str]:
+    """The card's text split at its blanks — the pieces the voice actually reads.
+
+    Every joint between two pieces is a blank, and becomes a pause.
+    """
+    return [part.strip() for part in BLANK.split(text)]
+
 
 def stem_for(text: str) -> str:
-    """Content-addressed name, so editing a card's text yields a fresh clip."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:STEM_LENGTH]
+    """Content-addressed name, so editing a card's text yields a fresh clip.
+
+    Keyed on how the card sounds rather than how it is written: changing the
+    length of a pause re-renders exactly the clips that have one and leaves the
+    rest alone, and two cards that sound identical share a clip. Text with no
+    blank keys on itself, unchanged.
+    """
+    recipe = f"\x00pause:{BLANK_PAUSE}\x00".join(speech_parts(text))
+    return hashlib.sha256(recipe.encode("utf-8")).hexdigest()[:STEM_LENGTH]
+
+
+async def synthesise(text: str) -> bytes:
+    """The voice reading one uninterrupted piece of text."""
+    communicate = edge_tts.Communicate(text, VOICE, rate=RATE)
+    audio = bytearray()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio.extend(chunk["data"])
+    if not audio:
+        raise RuntimeError("no audio returned")
+    return bytes(audio)
 
 
 async def render(text: str, path: Path) -> None:
     """Writes one clip, retrying — this is a network call and does flake."""
     for attempt in range(1, ATTEMPTS + 1):
         try:
-            communicate = edge_tts.Communicate(text, VOICE, rate=RATE)
             audio = bytearray()
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    audio.extend(chunk["data"])
-            if not audio:
-                raise RuntimeError("no audio returned")
+            for index, part in enumerate(speech_parts(text)):
+                # Every piece after the first follows a blank, so the pause goes
+                # in front of it — including when the piece is empty, which is a
+                # blank at one end of the card.
+                if index:
+                    audio.extend(silence(BLANK_PAUSE))
+                if part:
+                    audio.extend(await synthesise(part))
             # Write via a temp file so an interrupted run cannot leave a
             # truncated clip that a later run would treat as already done.
             tmp = path.with_suffix(".partial")
@@ -106,15 +157,17 @@ async def main() -> int:
     texts: list[str] = json.loads(PHRASES.read_text(encoding="utf-8"))
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    collisions: dict[str, str] = {}
+    collisions: dict[str, tuple[str, ...]] = {}
     for text in texts:
-        stem = stem_for(text)
-        if stem in collisions and collisions[stem] != text:
-            print(f"hash collision: {collisions[stem]!r} and {text!r}", file=sys.stderr)
+        stem, parts = stem_for(text), tuple(speech_parts(text))
+        # Compared on the pieces, not the text: cards that differ only in how
+        # long their blank is sound the same and rightly share a clip.
+        if stem in collisions and collisions[stem] != parts:
+            print(f"hash collision: {collisions[stem]!r} and {parts!r}", file=sys.stderr)
             return 1
-        collisions[stem] = text
+        collisions[stem] = parts
 
-    todo = [(t, OUT_DIR / f"{stem_for(t)}.mp3") for t in texts]
+    todo = list({stem_for(t): (t, OUT_DIR / f"{stem_for(t)}.mp3") for t in texts}.values())
     if not force:
         todo = [(t, p) for t, p in todo if not p.exists() or p.stat().st_size == 0]
 

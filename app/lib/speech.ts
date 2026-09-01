@@ -39,6 +39,25 @@ const RATE = 0.85;
 /** Where `scripts/generate-audio.py` writes its clips, under `public/`. */
 const CLIP_BASE = "/audio/ja/";
 
+/** A run of underscores on a card is a blank to fill in, not text to sound out. */
+const BLANK = /[＿_]+/g;
+
+/**
+ * What the voice is given, which is not always the card's text. Read literally a
+ * blank is sounded out one underscore at a time, so it is dropped here.
+ *
+ * The clips hold a blank open as two seconds of silence instead (see
+ * `scripts/generate-audio.py`), which this path cannot reproduce: Web Speech has
+ * no timed pause, and the alternative — queueing the rest of the phrase behind a
+ * two-second timer — would strand it on iOS, which refuses to speak once the
+ * gesture that started the utterance has ended. Dropping the blank keeps the
+ * fallback saying the whole phrase; the pause lives in the clips, which is what
+ * every card actually plays.
+ */
+function speechText(text: string): string {
+  return text.replace(BLANK, " ").trim();
+}
+
 /**
  * Whether `text` has a bundled clip, and so can be pronounced regardless of
  * which voices the browser or OS provides. Pure and SSR-safe, so a button can
@@ -236,7 +255,7 @@ function speakWithVoice(text: string, key: string): void {
   const synth = getSynth();
   if (!synth) return;
 
-  const next = new SpeechSynthesisUtterance(text);
+  const next = new SpeechSynthesisUtterance(speechText(text));
   // A voice may still be pending; the language tag alone is enough for the
   // engine to choose a Japanese one once it has loaded them.
   if (voice) next.voice = voice;
