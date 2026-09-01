@@ -335,12 +335,15 @@ export const gettingAround = phraseDeck("getting-around", [
 ]);
 
 export const dining = phraseDeck("dining", [
+  ["何名様ですか?", "Nan-mei-sama desu ka?", "How many people?"],
   ["＿＿＿名です", "___ mei desu", "A table for ___ people"],
   ["一人です", "Hitori desu", "Table for 1"],
   ["二人です", "Futari desu", "Table for 2"],
   ["三人です", "San-nin desu", "Table for 3"],
   ["四人です", "Yo-nin desu", "Table for 4"],
   ["五人です", "Go-nin desu", "Table for 5"],
+  ["店内で", "Tennai de", "Eat in"],
+  ["お持ち帰り", "Omochikaeri", "Take out"],
   ["メニューをお願いします", "Menyuu o onegaishimasu", "Menu, please"],
   ["おすすめは何ですか?", "Osusume wa nan desu ka?", "Recommendation?"],
   ["これをください", "Kore o kudasai", "I'll have this"],
@@ -373,6 +376,10 @@ export const shopping = phraseDeck("shopping", [
   ["現金", "Genkin", "Cash"],
   ["免税", "Menzei", "Tax-free"],
   ["レシート", "Reshiito", "Receipt"],
+  ["レジ袋要りますか?", "Reji-bukuro irimasu ka?", "Do you need a plastic bag?"],
+  ["袋要りますか?", "Fukuro irimasu ka?", "Do you need a bag?"],
+  ["レジ袋一枚お願いします", "Reji-bukuro ichimai onegaishimasu", "1 plastic bag please"],
+  ["袋お願いします", "Fukuro onegaishimasu", "Bag please"],
   ["高いです", "Takai desu", "Too expensive"],
   ["小さい/大きいサイズはありますか?", "Chiisai / ookii saizu wa arimasu ka?", "Smaller / bigger size?"],
 ]);
@@ -414,6 +421,7 @@ export const everyday = phraseDeck("everyday", [
   ["もう一度言ってください", "Mou ichido itte kudasai", "Can you say that again?"],
   ["かわいい", "Kawaii", "Cute"],
   ["すごい", "Sugoi", "Cool / awesome"],
+  ["禁煙", "Kin'en", "No smoking"],
 ]);
 
 export const numbers = phraseDeck("numbers", [

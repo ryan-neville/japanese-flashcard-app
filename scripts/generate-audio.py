@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -46,17 +47,34 @@ ATTEMPTS = 3
 # the manifest that ships to the browser small.
 STEM_LENGTH = 12
 
+# A run of underscores is a blank for the learner to fill in ("私は＿＿＿です"),
+# not something to sound out. Read literally the voice works through the run one
+# character at a time, so any run — full-width or ASCII, however long — is spoken
+# as the single English word instead.
+BLANK = re.compile(r"[＿_]+")
+BLANK_SPOKEN = " underscore "
+
+
+def speech_text(text: str) -> str:
+    """What the voice is actually given, which is not always the card's text."""
+    return BLANK.sub(BLANK_SPOKEN, text).strip()
+
 
 def stem_for(text: str) -> str:
-    """Content-addressed name, so editing a card's text yields a fresh clip."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:STEM_LENGTH]
+    """Content-addressed name, so editing a card's text yields a fresh clip.
+
+    Keyed on what is spoken rather than what is written, so changing how a
+    blank is read re-renders exactly the clips it affects — and two cards that
+    sound identical share one.
+    """
+    return hashlib.sha256(speech_text(text).encode("utf-8")).hexdigest()[:STEM_LENGTH]
 
 
 async def render(text: str, path: Path) -> None:
     """Writes one clip, retrying — this is a network call and does flake."""
     for attempt in range(1, ATTEMPTS + 1):
         try:
-            communicate = edge_tts.Communicate(text, VOICE, rate=RATE)
+            communicate = edge_tts.Communicate(speech_text(text), VOICE, rate=RATE)
             audio = bytearray()
             async for chunk in communicate.stream():
                 if chunk["type"] == "audio":
@@ -108,13 +126,15 @@ async def main() -> int:
 
     collisions: dict[str, str] = {}
     for text in texts:
-        stem = stem_for(text)
-        if stem in collisions and collisions[stem] != text:
-            print(f"hash collision: {collisions[stem]!r} and {text!r}", file=sys.stderr)
+        stem, spoken = stem_for(text), speech_text(text)
+        # Compared on the spoken form: cards that differ only in how long their
+        # blank is are read the same and rightly share a clip.
+        if stem in collisions and collisions[stem] != spoken:
+            print(f"hash collision: {collisions[stem]!r} and {spoken!r}", file=sys.stderr)
             return 1
-        collisions[stem] = text
+        collisions[stem] = spoken
 
-    todo = [(t, OUT_DIR / f"{stem_for(t)}.mp3") for t in texts]
+    todo = list({stem_for(t): (t, OUT_DIR / f"{stem_for(t)}.mp3") for t in texts}.values())
     if not force:
         todo = [(t, p) for t, p in todo if not p.exists() or p.stat().st_size == 0]
 

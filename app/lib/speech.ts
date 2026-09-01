@@ -39,6 +39,19 @@ const RATE = 0.85;
 /** Where `scripts/generate-audio.py` writes its clips, under `public/`. */
 const CLIP_BASE = "/audio/ja/";
 
+/** A run of underscores on a card is a blank to fill in, not text to sound out. */
+const BLANK = /[＿_]+/g;
+
+/**
+ * What the voice is given, which is not always the card's text: a blank of any
+ * length is read as the single English word rather than one underscore at a
+ * time. Mirrors `speech_text` in `scripts/generate-audio.py`, so the fallback
+ * says what the bundled clips say.
+ */
+function speechText(text: string): string {
+  return text.replace(BLANK, " underscore ").trim();
+}
+
 /**
  * Whether `text` has a bundled clip, and so can be pronounced regardless of
  * which voices the browser or OS provides. Pure and SSR-safe, so a button can
@@ -236,7 +249,7 @@ function speakWithVoice(text: string, key: string): void {
   const synth = getSynth();
   if (!synth) return;
 
-  const next = new SpeechSynthesisUtterance(text);
+  const next = new SpeechSynthesisUtterance(speechText(text));
   // A voice may still be pending; the language tag alone is enough for the
   // engine to choose a Japanese one once it has loaded them.
   if (voice) next.voice = voice;
