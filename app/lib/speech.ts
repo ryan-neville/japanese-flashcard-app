@@ -43,13 +43,19 @@ const CLIP_BASE = "/audio/ja/";
 const BLANK = /[＿_]+/g;
 
 /**
- * What the voice is given, which is not always the card's text: a blank of any
- * length is read as the single English word rather than one underscore at a
- * time. Mirrors `speech_text` in `scripts/generate-audio.py`, so the fallback
- * says what the bundled clips say.
+ * What the voice is given, which is not always the card's text. Read literally a
+ * blank is sounded out one underscore at a time, so it is dropped here.
+ *
+ * The clips hold a blank open as two seconds of silence instead (see
+ * `scripts/generate-audio.py`), which this path cannot reproduce: Web Speech has
+ * no timed pause, and the alternative — queueing the rest of the phrase behind a
+ * two-second timer — would strand it on iOS, which refuses to speak once the
+ * gesture that started the utterance has ended. Dropping the blank keeps the
+ * fallback saying the whole phrase; the pause lives in the clips, which is what
+ * every card actually plays.
  */
 function speechText(text: string): string {
-  return text.replace(BLANK, " underscore ").trim();
+  return text.replace(BLANK, " ").trim();
 }
 
 /**
