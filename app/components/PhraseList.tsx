@@ -19,7 +19,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { decks, resolveCards, type CardSet, type Flashcard } from "../data/flashcards";
+import {
+  decks,
+  deckGroups,
+  resolveCards,
+  type CardSet,
+  type Deck,
+  type DeckGroup,
+  type Flashcard,
+} from "../data/flashcards";
 import {
   cardKey,
   getServerSnapshot,
@@ -29,10 +37,16 @@ import {
   toggleStar,
 } from "../lib/progress";
 import { getSection, getServerSection, saveSection, subscribeSection } from "../lib/section";
+import { matchesQuery, parseQuery } from "../lib/search";
 import SpeakButton from "./SpeakButton";
 
-/** The phrasebook decks, in registry order — the sections offered in the menu. */
-const sections = decks.filter((d) => d.group === "Travel Phrasebook");
+/** Every phrase deck, in registry order — the sections offered in the menu. */
+const sections = decks.filter((d) => d.group !== "Kana");
+
+/** The same sections split by deck group, so the section menu can label them. */
+const sectionsByGroup: { group: DeckGroup; decks: Deck[] }[] = deckGroups
+  .filter((group) => group !== "Kana")
+  .map((group) => ({ group, decks: sections.filter((d) => d.group === group) }));
 
 /** A section id, the virtual section that lists every deck, or the user's custom list. */
 type Section = CardSet | "all" | "custom";
@@ -166,7 +180,8 @@ export default function PhraseList() {
     [custom],
   );
 
-  const q = query.trim().toLowerCase();
+  // null while the box is empty — every list below then skips filtering.
+  const q = useMemo(() => parseQuery(query), [query]);
 
   const shownSections = useMemo(() => {
     if (section === "all") return sections;
@@ -179,13 +194,13 @@ export default function PhraseList() {
     return shownSections
       .map((deck) => ({
         deck,
-        cards: deck.cards.filter((c) => (c.english ?? "").toLowerCase().includes(q)),
+        cards: deck.cards.filter((c) => matchesQuery(c, q)),
       }))
       .filter((entry) => entry.cards.length > 0);
   }, [shownSections, q]);
 
   const customFilteredCards = useMemo(
-    () => (q ? customCards.filter((c) => (c.english ?? "").toLowerCase().includes(q)) : customCards),
+    () => (q ? customCards.filter((c) => matchesQuery(c, q)) : customCards),
     [customCards, q],
   );
 
@@ -199,7 +214,7 @@ export default function PhraseList() {
 
   // Reordering a filtered subset against the full stored order is ambiguous,
   // so dragging is only offered with no search narrowing the list.
-  const canReorder = section === "custom" && q === "";
+  const canReorder = section === "custom" && q === null;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -233,20 +248,24 @@ export default function PhraseList() {
         <option value="all" className="text-gray-900">
           All sections
         </option>
-        {sections.map((deck) => (
-          <option key={deck.id} value={deck.id} className="text-gray-900">
-            {deck.label}
-          </option>
+        {sectionsByGroup.map(({ group, decks: groupDecks }) => (
+          <optgroup key={group} label={group} className="text-gray-900">
+            {groupDecks.map((deck) => (
+              <option key={deck.id} value={deck.id} className="text-gray-900">
+                {deck.label}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
 
-      {/* Search — English only */}
+      {/* Search — English meaning or romaji reading */}
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search phrases (English)"
-        aria-label="Search phrases in English"
+        placeholder="Search phrases (English or romaji)"
+        aria-label="Search phrases by English meaning or romaji"
         className="min-h-[44px] w-72 sm:w-96 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 touch-manipulation"
       />
 
@@ -266,7 +285,7 @@ export default function PhraseList() {
             <h2 className="text-xs font-semibold tracking-widest uppercase mb-2 px-1 text-white/60">
               My List
             </h2>
-            {!canReorder && q && (
+            {!canReorder && q !== null && (
               <p className="text-white/40 text-xs mb-2 px-1">Clear search to reorder.</p>
             )}
             <ul className="rounded-2xl border border-white/20 bg-white/10 shadow-2xl overflow-hidden">
