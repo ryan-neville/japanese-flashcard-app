@@ -12,6 +12,11 @@ interface Props {
   onPrev: () => void;
   /** Drops this card out of the rotation until it is unhidden. */
   onHide: () => void;
+  /** Whether this card is in the user's custom "My List". */
+  isStarred: boolean;
+  onToggleStar: () => void;
+  /** Shows the English side before the Japanese side, on phrase cards. */
+  englishFirst: boolean;
   current: number;
   total: number;
 }
@@ -42,7 +47,17 @@ function emWidth(text: string): number {
   return em;
 }
 
-export default function Flashcard({ card, onNext, onPrev, onHide, current, total }: Props) {
+export default function Flashcard({
+  card,
+  onNext,
+  onPrev,
+  onHide,
+  isStarred,
+  onToggleStar,
+  englishFirst,
+  current,
+  total,
+}: Props) {
   const [flipped, setFlipped] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -122,6 +137,48 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
       }
     : {};
 
+  // The Japanese-side and English-side content, independent of which physical
+  // face (front/back) they end up on — the "English first" toggle swaps their
+  // positions for phrase cards, but never touches the flip mechanics below.
+  const japaneseBlock = (
+    <>
+      <span
+        className={`${frontSize} font-light text-white leading-tight text-center px-6`}
+        style={frontStyle}
+      >
+        {card.japanese}
+      </span>
+      {isPhrase && (
+        <span className="mt-4 px-6 text-center text-lg sm:text-xl font-medium text-white/70">
+          {card.romaji}
+        </span>
+      )}
+    </>
+  );
+
+  const englishBlock = (
+    <span className="px-6 text-center text-3xl sm:text-4xl font-semibold text-white leading-snug">
+      {card.english}
+    </span>
+  );
+
+  const kanaBackBlock = (
+    <>
+      <span className="text-6xl sm:text-7xl font-light text-white mb-4 leading-none">
+        {card.japanese}
+      </span>
+      <span className="text-4xl sm:text-5xl font-bold text-white/90 tracking-widest">
+        {card.romaji}
+      </span>
+    </>
+  );
+
+  // Only phrase cards have an English side to lead with; kana cards always show
+  // the glyph on front and the glyph+romaji on the back, toggle or not.
+  const frontIsEnglish = isPhrase && englishFirst;
+  const frontContent = frontIsEnglish ? englishBlock : japaneseBlock;
+  const backContent = isPhrase ? (frontIsEnglish ? japaneseBlock : englishBlock) : kanaBackBlock;
+
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="text-sm font-medium tracking-widest uppercase opacity-60">
@@ -162,17 +219,7 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
             <span className={`text-xs font-semibold tracking-widest uppercase mb-4 ${setColor}`}>
               {setLabel}
             </span>
-            <span
-              className={`${frontSize} font-light text-white leading-tight text-center px-6`}
-              style={frontStyle}
-            >
-              {card.japanese}
-            </span>
-            {isPhrase && (
-              <span className="mt-4 px-6 text-center text-lg sm:text-xl font-medium text-white/70">
-                {card.romaji}
-              </span>
-            )}
+            {frontContent}
             <span className="text-xs text-white/40 mt-6">tap to reveal</span>
           </div>
 
@@ -184,6 +231,10 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
+              // Makes `cqw` on the phrase text resolve against the card face —
+              // needed here too since "English first" can put the Japanese
+              // block (which sizes itself in cqw) on either face.
+              containerType: "inline-size",
               ...faceVisibility(flipped),
             } as React.CSSProperties}
           >
@@ -191,20 +242,7 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
             <span className={`text-xs font-semibold tracking-widest uppercase mb-4 ${setColor}`}>
               {setLabel}
             </span>
-            {isPhrase ? (
-              <span className="px-6 text-center text-3xl sm:text-4xl font-semibold text-white leading-snug">
-                {card.english}
-              </span>
-            ) : (
-              <>
-                <span className="text-6xl sm:text-7xl font-light text-white mb-4 leading-none">
-                  {card.japanese}
-                </span>
-                <span className="text-4xl sm:text-5xl font-bold text-white/90 tracking-widest">
-                  {card.romaji}
-                </span>
-              </>
-            )}
+            {backContent}
           </div>
         </div>
       </div>
@@ -233,12 +271,25 @@ export default function Flashcard({ card, onNext, onPrev, onHide, current, total
         </button>
       </div>
 
-      <button
-        onClick={onHide}
-        className="px-4 py-2 min-h-[44px] rounded-lg text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 text-sm font-medium transition-colors touch-manipulation"
-      >
-        Hide this card
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={onToggleStar}
+          aria-pressed={isStarred}
+          className={`px-4 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-colors touch-manipulation ${
+            isStarred
+              ? "text-amber-300 hover:text-amber-200 hover:bg-white/10 active:bg-white/20"
+              : "text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20"
+          }`}
+        >
+          {isStarred ? "★ In My List" : "☆ Add to My List"}
+        </button>
+        <button
+          onClick={onHide}
+          className="px-4 py-2 min-h-[44px] rounded-lg text-white/60 hover:text-white hover:bg-white/10 active:bg-white/20 text-sm font-medium transition-colors touch-manipulation"
+        >
+          Hide this card
+        </button>
+      </div>
     </div>
   );
 }

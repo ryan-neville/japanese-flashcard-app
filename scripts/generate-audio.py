@@ -53,7 +53,7 @@ STEM_LENGTH = 12
 # one character at a time. A blank of any length, full-width or ASCII, is held
 # open as silence instead, leaving room to say the missing word.
 BLANK = re.compile(r"[＿_]+")
-BLANK_PAUSE = 2.0
+BLANK_PAUSE = 0.6
 
 # One frame of digital silence in the format edge-tts returns (MPEG-2 Layer III,
 # 24 kHz, 48 kbps, mono): its own 4-byte frame header followed by an empty frame

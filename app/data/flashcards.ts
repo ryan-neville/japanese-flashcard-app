@@ -750,3 +750,25 @@ export const decks: Deck[] = [
 export const deckById = new Map<CardSet, Deck>(decks.map((d) => [d.id, d]));
 
 export const deckGroups: DeckGroup[] = ["Kana", "Travel Phrasebook", "Menu Guide"];
+
+/**
+ * Stable identity for a card. Positions shift when a deck is edited, so hidden
+ * and starred cards are stored by content instead: no two cards share a set and
+ * a Japanese form, which makes the pair a durable key.
+ */
+export function cardKey(card: Flashcard): string {
+  return `${card.set}|${card.japanese}`;
+}
+
+/** Every card across every deck, in registry order. */
+export const allCards: Flashcard[] = decks.flatMap((d) => d.cards);
+
+export const cardByKey = new Map<string, Flashcard>(allCards.map((c) => [cardKey(c), c]));
+
+/**
+ * Resolves stored card keys back into cards, silently dropping any key whose
+ * card no longer exists (e.g. deck data changed since the key was saved).
+ */
+export function resolveCards(keys: string[]): Flashcard[] {
+  return keys.map((k) => cardByKey.get(k)).filter((c): c is Flashcard => c !== undefined);
+}

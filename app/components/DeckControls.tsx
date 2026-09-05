@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { decks, deckGroups, type CardSet, type DeckGroup } from "../data/flashcards";
 
-/** A deck id, plus the virtual deck that merges both kana sets. */
-export type Mode = CardSet | "kana-both";
+/** A deck id, the virtual deck that merges both kana sets, or the user's custom list. */
+export type Mode = CardSet | "kana-both" | "custom";
 
 interface Props {
   mode: Mode;
@@ -13,6 +13,10 @@ interface Props {
   onRestart: () => void;
   /** Throws away every saved preference — deck, position, shuffle and hidden cards. */
   onClear: () => void;
+  /** Number of cards currently starred into "My List". */
+  customCount: number;
+  englishFirst: boolean;
+  onToggleEnglishFirst: () => void;
 }
 
 const optionsByGroup: { group: DeckGroup; options: { value: Mode; label: string }[] }[] =
@@ -26,7 +30,16 @@ const optionsByGroup: { group: DeckGroup; options: { value: Mode; label: string 
     ],
   }));
 
-export default function DeckControls({ mode, onModeChange, onShuffle, onRestart, onClear }: Props) {
+export default function DeckControls({
+  mode,
+  onModeChange,
+  onShuffle,
+  onRestart,
+  onClear,
+  customCount,
+  englishFirst,
+  onToggleEnglishFirst,
+}: Props) {
   // Clearing is not undoable, so the button asks once before it fires.
   const [confirming, setConfirming] = useState(false);
 
@@ -39,6 +52,11 @@ export default function DeckControls({ mode, onModeChange, onShuffle, onRestart,
         className="min-h-[44px] w-72 sm:w-96 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 touch-manipulation"
         aria-label="Choose a deck"
       >
+        <optgroup label="My List" className="text-gray-900">
+          <option value="custom" className="text-gray-900">
+            My List{customCount > 0 ? ` (${customCount})` : ""}
+          </option>
+        </optgroup>
         {optionsByGroup.map(({ group, options }) => (
           <optgroup key={group} label={group} className="text-gray-900">
             {options.map((o) => (
@@ -49,6 +67,16 @@ export default function DeckControls({ mode, onModeChange, onShuffle, onRestart,
           </optgroup>
         ))}
       </select>
+
+      <label className="flex items-center gap-2 min-h-[44px] text-sm text-white/70 select-none cursor-pointer touch-manipulation">
+        <input
+          type="checkbox"
+          checked={englishFirst}
+          onChange={onToggleEnglishFirst}
+          className="h-4 w-4 rounded border-white/30 bg-white/10 accent-white/80"
+        />
+        English first
+      </label>
 
       {/* Actions */}
       <div className="flex flex-wrap justify-center gap-3">
