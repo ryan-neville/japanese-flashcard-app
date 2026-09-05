@@ -1,11 +1,14 @@
-import { deckById, type CardSet, type Flashcard } from "../data/flashcards";
+import { cardKey, deckById, type CardSet, type Flashcard } from "../data/flashcards";
 import type { Mode } from "../components/DeckControls";
+
+export { cardKey } from "../data/flashcards";
 
 const STORAGE_KEY = "japanese-flashcards:progress";
 
 /**
  * The slice of state that survives a refresh: the chosen deck, the position in
- * it, the shuffle order, and the cards hidden from rotation. The order is stored
+ * it, the shuffle order, the cards hidden from rotation, the user's custom
+ * cross-deck list, and the flip-order preference. The shuffle order is stored
  * as a permutation of the deck's indices — without it a reload would reshuffle
  * and the saved position would land on an unrelated card.
  */
@@ -15,21 +18,39 @@ export interface Progress {
   order: number[] | null;
   /** `cardKey` of every hidden card, across all decks. */
   hidden: string[];
+  /** `cardKey` of every card starred into "My List", in the user's chosen order. */
+  custom: string[];
+  /** Shows the English side of a phrase card before the Japanese side. */
+  englishFirst: boolean;
 }
 
-export const DEFAULT_PROGRESS: Progress = { mode: "hiragana", index: 0, order: null, hidden: [] };
+export const DEFAULT_PROGRESS: Progress = {
+  mode: "hiragana",
+  index: 0,
+  order: null,
+  hidden: [],
+  custom: [],
+  englishFirst: false,
+};
 
-/**
- * Stable identity for a card. Positions shift when a deck is edited, so hidden
- * cards are stored by content instead: no two cards share a set and a Japanese
- * form, which makes the pair a durable key.
- */
-export function cardKey(card: Flashcard): string {
-  return `${card.set}|${card.japanese}`;
+export function isMode(value: unknown): value is Mode {
+  return (
+    value === "kana-both" ||
+    value === "custom" ||
+    (typeof value === "string" && deckById.has(value as CardSet))
+  );
 }
 
-function isMode(value: unknown): value is Mode {
-  return value === "kana-both" || (typeof value === "string" && deckById.has(value as CardSet));
+/** Adds `key` to `list` if absent, removes it if present. */
+export function toggleCustomKey(list: string[], key: string): string[] {
+  return list.includes(key) ? list.filter((k) => k !== key) : [...list, key];
+}
+
+/** Stars or unstars `card` in the custom list — the one place Flashcards and
+ * the Phrasebook both toggle "My List" membership, so future changes (a size
+ * cap, a dedup guard, analytics) only need to happen here. */
+export function toggleStar(current: string[], card: Flashcard): string[] {
+  return toggleCustomKey(current, cardKey(card));
 }
 
 /** Reads stored progress, keeping only the fields that still make sense. */
@@ -41,12 +62,14 @@ function parse(raw: string): Progress {
     return DEFAULT_PROGRESS;
   }
   if (typeof parsed !== "object" || parsed === null) return DEFAULT_PROGRESS;
-  const { mode, index, order, hidden } = parsed as Record<string, unknown>;
+  const { mode, index, order, hidden, custom, englishFirst } = parsed as Record<string, unknown>;
   return {
     mode: isMode(mode) ? mode : DEFAULT_PROGRESS.mode,
     index: Number.isInteger(index) && (index as number) >= 0 ? (index as number) : 0,
     order: Array.isArray(order) && order.every((n) => Number.isInteger(n)) ? (order as number[]) : null,
     hidden: Array.isArray(hidden) ? hidden.filter((k): k is string => typeof k === "string") : [],
+    custom: Array.isArray(custom) ? custom.filter((k): k is string => typeof k === "string") : [],
+    englishFirst: typeof englishFirst === "boolean" ? englishFirst : DEFAULT_PROGRESS.englishFirst,
   };
 }
 

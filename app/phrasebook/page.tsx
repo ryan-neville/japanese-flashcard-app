@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import AppLink from "../components/AppLink";
 import PhraseList from "../components/PhraseList";
 
@@ -22,7 +23,9 @@ export default function PhrasebookPage() {
         ← Flashcards
       </AppLink>
 
-      <PhraseList />
+      <Suspense fallback={null}>
+        <PhraseList />
+      </Suspense>
     </main>
   );
 }
