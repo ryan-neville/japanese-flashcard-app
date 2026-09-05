@@ -41,3 +41,7 @@ Check support for any CSS property, selector, or web API you are about to introd
 ## Verification
 
 Before calling a UI change complete, confirm it in **at least two different engines** (e.g. Edge/Chrome plus Firefox), and check the mobile layout at a 375 px-wide viewport with touch emulation on. `npm run dev:lan` serves on `0.0.0.0:3002` for testing against a real phone on the LAN — use it for anything touching gestures, the flip animation, or viewport sizing, since device emulation does not reproduce iOS Safari's compositing or toolbar behaviour. State which browsers you actually checked; if you could not verify one, say so rather than implying you did.
+
+# Commit messages
+
+Prefix the subject line with `feat:` for a new feature or enhancement, or `fix:` for a bug fix — e.g. `feat: Use prerendered audio for playback.` or `fix: Changed to pause instead of pronouncing underscore.` For a commit that's mostly one or the other, pick the dominant change; there's no third prefix for pure refactors or docs.
