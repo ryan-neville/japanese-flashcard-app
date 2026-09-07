@@ -1,0 +1,138 @@
+name: Release and sync portfolio submodule
+
+# Triggers once a PR is merged into main. Two jobs:
+#   1. release            - bump package.json (conventional commits), tag, push, create GitHub Release
+#   2. update-portfolio   - update the japanese-flashcard-app submodule in rn-portfolio to the new tag,
+#                           open a PR there, and enable auto-merge
+#
+# Required repo secrets (set on japanese-flashcard-app):
+#   PORTFOLIO_REPO_TOKEN - PAT (classic "repo" scope, or fine-grained with
+#                           Contents: Read/Write + Pull requests: Read/Write) that can
+#                           push branches and open/merge PRs on the private
+#                           ryan-neville/rn-portfolio repo.
+#
+# Required repo settings on rn-portfolio:
+#   - "Allow auto-merge" enabled (Settings > General > Pull Requests), otherwise
+#     `gh pr merge --auto` will fail.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Determine next version from conventional commits
+        id: bump
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: main
+          default_bump: patch
+          dry_run: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bump package.json version
+        run: npm version "${{ steps.bump.outputs.new_version }}" --no-git-tag-version --allow-same-version
+
+      - name: Commit, tag, and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(release): ${{ steps.bump.outputs.new_tag }}"
+          git tag "${{ steps.bump.outputs.new_tag }}"
+          git push origin main
+          git push origin "${{ steps.bump.outputs.new_tag }}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.bump.outputs.new_tag }}" \
+            --title "${{ steps.bump.outputs.new_tag }}" \
+            --generate-notes
+
+  update-portfolio:
+    needs: release
+    runs-on: ubuntu-latest
+    env:
+      NEW_TAG: ${{ needs.release.outputs.new_tag }}
+      SUBMODULE_PATH: projects/japanese-flashcard-app
+      GH_TOKEN: ${{ secrets.PORTFOLIO_REPO_TOKEN }}
+    steps:
+      - name: Checkout rn-portfolio
+        uses: actions/checkout@v4
+        with:
+          repository: ryan-neville/rn-portfolio
+          token: ${{ secrets.PORTFOLIO_REPO_TOKEN }}
+          fetch-depth: 0
+          submodules: false
+
+      - name: Init submodule
+        run: git submodule update --init "$SUBMODULE_PATH"
+
+      - name: Create feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "feature/flashcard-app-${NEW_TAG}"
+
+      - name: Update submodule to latest tag
+        working-directory: ${{ github.workspace }}/projects/japanese-flashcard-app
+        run: |
+          git fetch --tags origin
+          git checkout "$NEW_TAG"
+
+      - name: Commit submodule bump
+        run: |
+          git add "$SUBMODULE_PATH"
+          if git diff --cached --quiet; then
+            echo "Submodule already at ${NEW_TAG}; nothing to commit."
+            echo "SKIP=true" >> "$GITHUB_ENV"
+          else
+            git commit -m "chore: bump japanese-flashcard-app submodule to ${NEW_TAG}"
+          fi
+
+      - name: Push feature branch
+        if: env.SKIP != 'true'
+        run: git push origin "feature/flashcard-app-${NEW_TAG}"
+
+      - name: Create pull request
+        if: env.SKIP != 'true'
+        run: |
+          gh pr create \
+            --repo ryan-neville/rn-portfolio \
+            --base main \
+            --head "feature/flashcard-app-${NEW_TAG}" \
+            --title "chore: bump japanese-flashcard-app submodule to ${NEW_TAG}" \
+            --body "Automated update of the \`japanese-flashcard-app\` submodule to [\`${NEW_TAG}\`](https://github.com/ryan-neville/japanese-flashcard-app/releases/tag/${NEW_TAG})."
+
+      - name: Enable auto-merge
+        if: env.SKIP != 'true'
+        run: |
+          gh pr merge "feature/flashcard-app-${NEW_TAG}" \
+            --repo ryan-neville/rn-portfolio \
+            --squash \
+            --auto
