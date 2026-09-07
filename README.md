@@ -103,7 +103,7 @@ Nearly every issue below has one root cause: **`next dev` and `next build` both 
 **1. Run Next directly instead of through npm.**
 
 ```powershell
-npx next dev -H 0.0.0.0 -p 3002
+npx next dev -H 0.0.0.0 -p 3001
 ```
 
 On Windows, `npm run` spawns a chain of processes and does not reliably forward Ctrl-C to them. Invoking `next` directly means Ctrl-C reaches the dev server itself, which shuts its workers down cleanly. This single change prevents most of the failures below.
