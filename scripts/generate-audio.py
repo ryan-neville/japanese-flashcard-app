@@ -55,6 +55,23 @@ STEM_LENGTH = 12
 BLANK = re.compile(r"[＿_]+")
 BLANK_PAUSE = 0.6
 
+# A "/" in a card's Japanese is ambiguous on its own: 鮪 / マグロ is the same
+# word "maguro" in two scripts, while 肉なし / ベジタリアン is two different
+# words. Read literally, both cases get spoken in full — which for the first
+# kind says the same word twice back to back. The romaji disambiguates: it
+# carries its own "/" exactly when the two Japanese sides are genuinely
+# different sounds, so only the first Japanese side is spoken when the romaji
+# has none.
+SLASH = re.compile(r"\s*/\s*")
+
+
+def speech_source(japanese: str, romaji: str) -> str:
+    """The text actually handed to the voice for one card."""
+    if "/" in japanese and "/" not in romaji:
+        return SLASH.split(japanese, maxsplit=1)[0]
+    return japanese
+
+
 # One frame of digital silence in the format edge-tts returns (MPEG-2 Layer III,
 # 24 kHz, 48 kbps, mono): its own 4-byte frame header followed by an empty frame
 # body, which decodes to 576 silent samples. Building the pause out of frames the
@@ -127,9 +144,17 @@ async def render(text: str, path: Path) -> None:
             await asyncio.sleep(1.5 * attempt)
 
 
-def write_manifest(texts: list[str]) -> None:
-    """Emits the text -> clip lookup the client uses to pick a file."""
-    entries = "\n".join(f"  {json.dumps(t, ensure_ascii=False)}: {json.dumps(stem_for(t))}," for t in texts)
+def write_manifest(cards: list[tuple[str, str]]) -> None:
+    """Emits the card's Japanese -> clip lookup the client uses to pick a file.
+
+    Keyed on the card's displayed text, which is what the client looks clips up
+    by; the clip itself is rendered from that card's `speech_source`, so a card
+    with a disambiguating "/" still resolves to the right file.
+    """
+    entries = "\n".join(
+        f"  {json.dumps(display, ensure_ascii=False)}: {json.dumps(stem_for(speak))},"
+        for display, speak in cards
+    )
     MANIFEST.write_text(
         "// GENERATED FILE - do not edit by hand.\n"
         "// Run `node scripts/extract-phrases.mjs > scripts/phrases.json` then\n"
@@ -154,24 +179,27 @@ async def main() -> int:
         print(f"missing {PHRASES.relative_to(ROOT)} - run scripts/extract-phrases.mjs first", file=sys.stderr)
         return 1
 
-    texts: list[str] = json.loads(PHRASES.read_text(encoding="utf-8"))
+    phrases: list[dict[str, str]] = json.loads(PHRASES.read_text(encoding="utf-8"))
+    # (displayed Japanese, what the voice actually reads) for each card.
+    cards = [(p["japanese"], speech_source(p["japanese"], p["romaji"])) for p in phrases]
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     collisions: dict[str, tuple[str, ...]] = {}
-    for text in texts:
-        stem, parts = stem_for(text), tuple(speech_parts(text))
+    for _, speak in cards:
+        stem, parts = stem_for(speak), tuple(speech_parts(speak))
         # Compared on the pieces, not the text: cards that differ only in how
-        # long their blank is sound the same and rightly share a clip.
+        # long their blank is (or which side of a disambiguated "/" they used)
+        # sound the same and rightly share a clip.
         if stem in collisions and collisions[stem] != parts:
             print(f"hash collision: {collisions[stem]!r} and {parts!r}", file=sys.stderr)
             return 1
         collisions[stem] = parts
 
-    todo = list({stem_for(t): (t, OUT_DIR / f"{stem_for(t)}.mp3") for t in texts}.values())
+    todo = list({stem_for(s): (s, OUT_DIR / f"{stem_for(s)}.mp3") for _, s in cards}.values())
     if not force:
-        todo = [(t, p) for t, p in todo if not p.exists() or p.stat().st_size == 0]
+        todo = [(s, p) for s, p in todo if not p.exists() or p.stat().st_size == 0]
 
-    print(f"{len(texts)} phrases, {len(todo)} to render with {VOICE}")
+    print(f"{len(cards)} phrases, {len(todo)} to render with {VOICE}")
 
     failures: list[str] = []
     semaphore = asyncio.Semaphore(CONCURRENCY)
@@ -189,14 +217,14 @@ async def main() -> int:
             if done % 25 == 0 or done == len(todo):
                 print(f"  {done}/{len(todo)}")
 
-    await asyncio.gather(*(worker(t, p) for t, p in todo))
+    await asyncio.gather(*(worker(s, p) for s, p in todo))
 
     # Only phrases that actually have a clip belong in the manifest; a missing
     # entry makes the app fall back to Web Speech rather than 404 on play.
-    have = [t for t in texts if (OUT_DIR / f"{stem_for(t)}.mp3").exists()]
+    have = [(d, s) for d, s in cards if (OUT_DIR / f"{stem_for(s)}.mp3").exists()]
     write_manifest(have)
 
-    wanted = {f"{stem_for(t)}.mp3" for t in texts}
+    wanted = {f"{stem_for(s)}.mp3" for _, s in cards}
     orphans = [p.name for p in OUT_DIR.glob("*.mp3") if p.name not in wanted]
     if orphans:
         print(f"{len(orphans)} clip(s) no longer referenced by any card:")
@@ -204,7 +232,7 @@ async def main() -> int:
             print(f"  {name}")
 
     total = sum(p.stat().st_size for p in OUT_DIR.glob("*.mp3"))
-    print(f"{len(have)}/{len(texts)} clips present, {total / 1_048_576:.1f} MiB total")
+    print(f"{len(have)}/{len(cards)} clips present, {total / 1_048_576:.1f} MiB total")
     print(f"manifest -> {MANIFEST.relative_to(ROOT)}")
 
     if failures:
