@@ -22,7 +22,7 @@ export type PhraseSet =
   | "soups"
   | "dessert"
   // Regional Delicacies
-  | "tokyo-arrival"
+  | "tokyo"
   | "yokohama"
   | "osaka"
   | "nagasaki"
@@ -30,8 +30,7 @@ export type PhraseSet =
   | "kitakyushu"
   | "oita"
   | "fukuoka"
-  | "himeji"
-  | "tokyo-return";
+  | "himeji";
 
 export type CardSet = KanaSet | PhraseSet;
 
@@ -45,6 +44,13 @@ export interface Flashcard {
    * Kana cards omit it — their back reveals the romaji instead.
    */
   english?: string;
+  /**
+   * Background beyond the plain translation — where a dish is from, how it's
+   * eaten, a seasonal note. Shown as smaller subtext under `english` rather
+   * than folded into it, since the regional-delicacy decks pair a short name
+   * with a longer aside and the two read very differently at flashcard size.
+   */
+  detail?: string;
 }
 
 export const hiragana: Flashcard[] = [
@@ -293,12 +299,22 @@ export const katakana: Flashcard[] = [
   { japanese: "リョ", romaji: "ryo", set: "katakana" },
 ];
 
-/** Builds a phrase deck from [japanese, romaji, english] rows. */
+/**
+ * Builds a phrase deck from [japanese, romaji, english] rows, or
+ * [japanese, romaji, english, detail] where a card carries extra background —
+ * see `detail` on `Flashcard`.
+ */
 function phraseDeck(
   set: PhraseSet,
-  rows: readonly (readonly [string, string, string])[],
+  rows: readonly (readonly [string, string, string] | readonly [string, string, string, string])[],
 ): Flashcard[] {
-  return rows.map(([japanese, romaji, english]) => ({ japanese, romaji, english, set }));
+  return rows.map(([japanese, romaji, english, detail]) => ({
+    japanese,
+    romaji,
+    english,
+    detail,
+    set,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -436,6 +452,7 @@ export const everyday = phraseDeck("everyday", [
 ]);
 
 export const numbers = phraseDeck("numbers", [
+  // Cardinal numbers
   ["一", "Ichi", "1"],
   ["二", "Ni", "2"],
   ["三", "San", "3"],
@@ -449,6 +466,37 @@ export const numbers = phraseDeck("numbers", [
   ["百", "Hyaku", "100"],
   ["千", "Sen", "1,000"],
   ["万", "Man", "10,000"],
+  // Counter: つ — generic objects, for anything with no specific counter
+  [
+    "一つ",
+    "Hitotsu",
+    "1 (general)",
+    "Generic counter for objects — used when no specific counter fits",
+  ],
+  ["二つ", "Futatsu", "2 (general)", "Generic counter for objects"],
+  ["三つ", "Mittsu", "3 (general)", "Generic counter for objects"],
+  ["四つ", "Yottsu", "4 (general)", "Generic counter for objects"],
+  ["五つ", "Itsutsu", "5 (general)", "Generic counter for objects"],
+  ["六つ", "Muttsu", "6 (general)", "Generic counter for objects"],
+  ["七つ", "Nanatsu", "7 (general)", "Generic counter for objects"],
+  ["八つ", "Yattsu", "8 (general)", "Generic counter for objects"],
+  ["九つ", "Kokonotsu", "9 (general)", "Generic counter for objects"],
+  [
+    "とお",
+    "Tou",
+    "10 (general)",
+    "Generic counter for objects — stops at 10; use plain numbers above that",
+  ],
+  // Counter: 泊 — nights spent somewhere, for booking a room
+  ["一泊", "Ippaku", "1 night", "Counter for nights staying somewhere"],
+  ["二泊", "Nihaku", "2 nights", "Counter for nights staying somewhere"],
+  ["三泊", "Sanpaku", "3 nights", "Counter for nights staying somewhere"],
+  // Counter: 階 — building floors
+  ["一階", "Ikkai", "1st floor", "Counter for building floors"],
+  ["二階", "Nikai", "2nd floor", "Counter for building floors"],
+  ["三階", "Sangai", "3rd floor", "Counter for building floors — irregular reading"],
+  ["四階", "Yonkai", "4th floor", "Counter for building floors"],
+  ["五階", "Gokai", "5th floor", "Counter for building floors"],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -583,92 +631,244 @@ export const dessert = phraseDeck("dessert", [
 // Regional Delicacies
 // ---------------------------------------------------------------------------
 
-export const tokyoArrival = phraseDeck("tokyo-arrival", [
-  ["江戸前寿司", "Edomae zushi", "Edomae sushi, the point of a Tokyo counter 【秋】秋刀魚 (sanma, Pacific saury), 小肌 (kohada, gizzard shad) at its best, early 黒鮪 (kuromaguro, bluefin)"],
-  ["もんじゃ焼き", "monjayaki", "Monjayaki. 月島西仲通り (Tsukishima Nishinaka-dōri) is lined with shops — the street is nicknamed もんじゃストリート"],
-  ["江戸前うなぎ", "Edomae unagi", "Steamed then grilled (蒸してから焼く), much softer than the Kansai style. 蒲焼 (kabayaki) over rice is 鰻重 (unajū)"],
-  ["深川めし", "Fukagawa-meshi", "Clams (あさり, asari) and rice, an old 下町 (shitamachi) dish. Served either as a miso broth over rice or as 炊き込み (takikomi, cooked together)"],
+export const tokyo = phraseDeck("tokyo", [
+  [
+    "江戸前寿司",
+    "Edomae zushi",
+    "Edomae sushi",
+    "The point of a Tokyo counter — 【秋】秋刀魚 (sanma, Pacific saury) and 小肌 (kohada, gizzard shad) at their best, early 黒鮪 (kuromaguro, bluefin)",
+  ],
+  [
+    "もんじゃ焼き",
+    "monjayaki",
+    "Monjayaki",
+    "月島西仲通り (Tsukishima Nishinaka-dōri) is lined with shops — the street is nicknamed もんじゃストリート",
+  ],
+  [
+    "江戸前うなぎ",
+    "Edomae unagi",
+    "Edomae-style eel",
+    "Steamed then grilled (蒸してから焼く), much softer than the Kansai style. 蒲焼 (kabayaki) over rice is 鰻重 (unajū)",
+  ],
+  [
+    "深川めし",
+    "Fukagawa-meshi",
+    "Fukagawa clam rice",
+    "Clams (あさり, asari) and rice, an old 下町 (shitamachi) dish. Served either as a miso broth over rice or as 炊き込み (takikomi, cooked together)",
+  ],
+  ["松茸", "matsutake", "Pine mushroom", "In 土瓶蒸し (dobin-mushi)"],
+  ["栗菓子", "kurigashi", "Chestnut sweets"],
+  ["新米", "shinmai", "New-crop rice", "On menus from mid-October"],
 ]);
 
 export const yokohama = phraseDeck("yokohama", [
-  ["サンマーメン", "sanmāmen", "Sanmamen: thin noodles under a starchy pork-and-vegetable topping. Born in Chinatown (中華街, Chūkagai)"],
-  ["家系ラーメン", "iekei rāmen", '"House-lineage" ramen: pork-bone-and-soy, spinach and nori. Started here'],
-  ["崎陽軒のシウマイ", "Kiyōken no shiumai", "Kiyoken shumai. Note the brand deliberately spells it シウマイ, not シュウマイ. The station bento is シウマイ弁当 (shiumai bentō)"],
-  ["牛鍋", "gyūnabe", "Beef hotpot. 太田なわのれん (Ōta Nawanoren) still serves the original style"],
-  ["ナポリタン / ドリア", "naporitan / doria", "Ketchup spaghetti and baked rice gratin, both invented at ホテルニューグランド (Hoteru Nyū Gurando)"],
+  [
+    "サンマーメン",
+    "sanmāmen",
+    "Sanmamen",
+    "Thin noodles under a starchy pork-and-vegetable topping. Born in Chinatown (中華街, Chūkagai)",
+  ],
+  [
+    "家系ラーメン",
+    "iekei rāmen",
+    '"House-lineage" ramen',
+    "Pork-bone-and-soy, spinach and nori. Originated in Yokohama",
+  ],
+  [
+    "崎陽軒のシウマイ",
+    "Kiyōken no shiumai",
+    "Kiyoken shumai",
+    "Note the brand deliberately spells it シウマイ, not シュウマイ. The station bento is シウマイ弁当 (shiumai bentō)",
+  ],
+  [
+    "牛鍋",
+    "gyūnabe",
+    "Beef hotpot",
+    "太田なわのれん (Ōta Nawanoren) still serves the original style",
+  ],
+  [
+    "ナポリタン / ドリア",
+    "naporitan / doria",
+    "Ketchup spaghetti / baked rice gratin",
+    "Both invented at ホテルニューグランド (Hoteru Nyū Gurando)",
+  ],
 ]);
 
 export const osaka = phraseDeck("osaka", [
-  ["串カツ", "kushikatsu", "Skewered deep-fried cutlets, Shinsekai (新世界). The rule on the wall is 二度漬け禁止 (nidozuke kinshi) — no double dipping"],
-  ["きつねうどん", "kitsune udon", "Udon with sweet fried tofu. Invented at うさみ亭マツバヤ (Usami-tei Matsubaya)"],
-  ["どて焼き", "doteyaki", "Beef tendon simmered in sweet miso, best with beer"],
-  ["バッテラ / 箱寿司", "battera / hakozushi", "Pressed sushi, the older Osaka form"],
-  ["551蓬莱の豚まん", "go-go-ichi Hōrai no butaman", '551 Horai pork buns. The number is read "go-go-ichi"'],
-  ["てっちり", "tecchiri", "Fugu hotpot 【秋】season opens around October"],
-  ["ミックスジュース", "mikkusu jūsu", "Mixed fruit juice at a 喫茶店 (kissaten). Pairs with the coffee hunting"],
+  [
+    "串カツ",
+    "kushikatsu",
+    "Skewered deep-fried cutlets",
+    "Shinsekai (新世界). The rule on the wall is 二度漬け禁止 (nidozuke kinshi) — no double dipping",
+  ],
+  [
+    "きつねうどん",
+    "kitsune udon",
+    "Udon with sweet fried tofu",
+    "Invented at うさみ亭マツバヤ (Usami-tei Matsubaya)",
+  ],
+  ["どて焼き", "doteyaki", "Beef tendon simmered in sweet miso"],
+  ["バッテラ / 箱寿司", "battera / hakozushi", "Pressed sushi", "The older Osaka form"],
+  [
+    "551蓬莱の豚まん",
+    "go-go-ichi Hōrai no butaman",
+    "551 Horai pork buns",
+    'The number is read "go-go-ichi"',
+  ],
+  ["てっちり", "tecchiri", "Fugu hotpot", "【秋】 Season opens around October"],
+  [
+    "ミックスジュース",
+    "mikkusu jūsu",
+    "Mixed fruit juice",
+    "A staple at kissaten (喫茶店), Japan's old-school coffee shops",
+  ],
 ]);
 
 export const nagasaki = phraseDeck("nagasaki", [
-  ["カステラ", "kasutera", "Castella sponge cake. 福砂屋 (Fukusaya) or 松翁軒 (Shōōken)"],
-  ["トルコライス", "Toruko raisu", '"Turkish rice": pilaf, spaghetti and a pork cutlet on one plate'],
-  ["卓袱料理", "shippoku ryōri", "Japanese-Chinese-Portuguese banquet cuisine. Needs a reservation, usually assumes 2+ people"],
-  ["ハトシ", "hatoshi", "Deep-fried shrimp toast (from Cantonese 蝦多士)"],
-  ["長崎茶碗蒸し", "Nagasaki chawanmushi", "Served huge, with udon in it"],
+  ["カステラ", "kasutera", "Castella sponge cake", "福砂屋 (Fukusaya) or 松翁軒 (Shōōken)"],
+  [
+    "トルコライス",
+    "Toruko raisu",
+    '"Turkish rice"',
+    "Pilaf, spaghetti and a pork cutlet on one plate",
+  ],
+  [
+    "卓袱料理",
+    "shippoku ryōri",
+    "Japanese-Chinese-Portuguese banquet cuisine",
+    "Needs a reservation, usually assumes 2+ people",
+  ],
+  ["ハトシ", "hatoshi", "Deep-fried shrimp toast", "From Cantonese 蝦多士"],
+  ["長崎茶碗蒸し", "Nagasaki chawanmushi", "Nagasaki chawanmushi", "Served huge, with udon in it"],
   ["角煮まんじゅう", "kakuni manjū", "Braised pork belly in a steamed bun"],
 ]);
 
 export const kumamoto = phraseDeck("kumamoto", [
-  ["馬刺し", "basashi", "Horse sashimi, the signature. Ask for 霜降り (shimofuri, fatty) or たてがみ (tategami, mane fat)"],
-  ["熊本ラーメン", "Kumamoto rāmen", "Tonkotsu with black garlic oil, マー油 (māyu)"],
-  ["辛子蓮根", "karashi renkon", "Mustard-stuffed lotus root, deep fried"],
-  ["太平燕", "taipīen", "Glass noodle soup, the local comfort dish"],
+  [
+    "馬刺し",
+    "basashi",
+    "Horse sashimi",
+    "Ask for 霜降り (shimofuri, fatty) or たてがみ (tategami, mane fat)",
+  ],
+  ["熊本ラーメン", "Kumamoto rāmen", "Kumamoto ramen", "Tonkotsu with black garlic oil, マー油 (māyu)"],
+  ["辛子蓮根", "karashi renkon", "Mustard-stuffed lotus root", "Deep fried"],
+  ["太平燕", "taipīen", "Glass noodle soup"],
   ["いきなり団子", "ikinari dango", "Sweet potato and anko dumpling"],
-  ["あか牛", "akaushi", "Red wagyu, leaner than typical wagyu"],
-  ["球磨焼酎", "Kuma shōchū", "Rice shochu, protected designation"],
+  ["あか牛", "akaushi", "Red wagyu", "Leaner than typical wagyu"],
+  ["球磨焼酎", "Kuma shōchū", "Rice shochu", "Protected designation"],
 ]);
 
 export const kitakyushu = phraseDeck("kitakyushu", [
-  ["焼きカレー", "yaki karē", "Baked curry with cheese and egg. Mojiko's dish; a strip of shops near the retro waterfront"],
-  ["小倉焼うどん", "Kokura yakiudon", "Where yakiudon was invented, made with dried noodles (干麺, kanmen)"],
-  ["ぬか炊き", "nukadaki", "Sardines or mackerel simmered in fermented rice bran (ぬか床, nukadoko). Old Kokura preservation dish"],
-  ["ふぐ／ふく", "fugu / fuku", "関門海峡 (Kanmon kaikyō) is fugu country. In Shimonoseki it's called ふく, a pun on 福 (luck). 唐戸市場 (Karato ichiba) is a short hop across"],
-  ["旦過市場", "Tanga ichiba", "For 海鮮丼 (kaisendon), or the make-your-own 大學丼 (daigaku-don) at 大學堂"],
+  [
+    "焼きカレー",
+    "yaki karē",
+    "Baked curry with cheese and egg",
+    "Mojiko's dish; a strip of shops near the retro waterfront",
+  ],
+  [
+    "小倉焼うどん",
+    "Kokura yakiudon",
+    "Fried udon",
+    "Where yakiudon was invented, made with dried noodles (干麺, kanmen)",
+  ],
+  [
+    "ぬか炊き",
+    "nukadaki",
+    "Fish simmered in fermented rice bran",
+    "Sardines or mackerel (ぬか床, nukadoko) — an old Kokura preservation dish",
+  ],
+  [
+    "ふぐ／ふく",
+    "fugu / fuku",
+    "Pufferfish",
+    "関門海峡 (Kanmon kaikyō) is fugu country. In Shimonoseki it's called ふく, a pun on 福 (luck). 唐戸市場 (Karato ichiba) is a short hop across",
+  ],
+  [
+    "旦過市場",
+    "Tanga ichiba",
+    "Tanga Market",
+    "For 海鮮丼 (kaisendon), or the make-your-own 大學丼 (daigaku-don) at 大學堂",
+  ],
 ]);
 
 export const oita = phraseDeck("oita", [
-  ["とり天", "toriten", "Chicken tempura with ponzu, the prefectural dish"],
-  ["中津からあげ", "Nakatsu karaage", "Karaage capital of Japan, if you get near Nakatsu"],
-  ["地獄蒸し", "jigoku-mushi", '"Hell-steamed" food cooked over the hot springs; do it yourself in 鉄輪 (Kannawa)'],
-  ["だんご汁 / やせうま", "dangojiru / yaseuma", "Same flat wheat noodle: once as savoury soup, once dusted with きな粉 (kinako) as a sweet"],
-  ["りゅうきゅう", "ryūkyū", "Fish marinated in soy, sesame and mirin, over rice"],
-  ["関あじ / 関さば", "seki-aji / seki-saba", "Premium horse mackerel and mackerel from 佐賀関 (Saganoseki), good enough raw"],
-  ["かぼす", "kabosu", "Citrus 【秋】peak season exactly when you're there. Goes on everything"],
-  ["Bスピークのロールケーキ", "Bī-supīku no rōru kēki", "B-speak roll cake, Yufuin"],
+  ["とり天", "toriten", "Chicken tempura with ponzu", "Oita's prefectural dish"],
+  [
+    "中津からあげ",
+    "Nakatsu karaage",
+    "Nakatsu karaage",
+    "Karaage capital of Japan, if you get near Nakatsu",
+  ],
+  [
+    "地獄蒸し",
+    "jigoku-mushi",
+    '"Hell-steamed" food',
+    "Cooked over the hot springs; do it yourself in 鉄輪 (Kannawa)",
+  ],
+  [
+    "だんご汁 / やせうま",
+    "dangojiru / yaseuma",
+    "Savory noodle soup / sweet noodle snack",
+    "Same flat wheat noodle: once as savoury soup (だんご汁), once dusted with きな粉 (kinako) as a sweet (やせうま)",
+  ],
+  ["りゅうきゅう", "ryūkyū", "Fish marinated in soy, sesame and mirin", "Served over rice"],
+  [
+    "関あじ / 関さば",
+    "seki-aji / seki-saba",
+    "Premium horse mackerel and mackerel",
+    "From 佐賀関 (Saganoseki), good enough raw",
+  ],
+  ["かぼす", "kabosu", "Kabosu citrus", "【秋】 Peak season in autumn. Used on everything from grilled fish to drinks"],
+  ["Bスピークのロールケーキ", "Bī-supīku no rōru kēki", "B-speak roll cake", "Yufuin"],
 ]);
 
 export const fukuoka = phraseDeck("fukuoka", [
-  ["博多豚骨ラーメン", "Hakata tonkotsu rāmen", "Thin noodles; order 替え玉 (kaedama, noodle refill). Hardness is 麺の固さ — バリカタ (barikata) is the standard ask"],
-  ["水炊き", "mizutaki", "Chicken hotpot, completely different animal from motsunabe"],
-  ["明太子", "mentaiko", "Spicy pollock roe. As 明太子入り卵焼き (mentaiko-iri tamagoyaki) or over rice. Best souvenir of the trip"],
-  ["ごまさば", "gomasaba", "Raw mackerel in sesame soy, a 屋台 (yatai) classic"],
-  ["博多うどん", "Hakata udon", "Deliberately soft noodles with ごぼう天 (gobōten, burdock tempura)"],
-  ["博多焼き鳥", "Hakata yakitori", "Start with 豚バラ (butabara, pork belly); the cabbage plate is free"],
-  ["梅ヶ枝餅", "umegae mochi", "Grilled red-bean mochi, Dazaifu (太宰府)"],
+  [
+    "博多豚骨ラーメン",
+    "Hakata tonkotsu rāmen",
+    "Hakata tonkotsu ramen",
+    "Thin noodles; order 替え玉 (kaedama, noodle refill). Hardness is 麺の固さ — バリカタ (barikata) is the standard ask",
+  ],
+  ["水炊き", "mizutaki", "Chicken hotpot", "Not to be confused with motsunabe (offal hotpot)"],
+  [
+    "明太子",
+    "mentaiko",
+    "Spicy pollock roe",
+    "A popular Fukuoka souvenir. Also served as 明太子入り卵焼き (mentaiko-iri tamagoyaki) or over rice",
+  ],
+  ["ごまさば", "gomasaba", "Raw mackerel in sesame soy", "A 屋台 (yatai) classic"],
+  [
+    "博多うどん",
+    "Hakata udon",
+    "Hakata udon",
+    "Deliberately soft noodles with ごぼう天 (gobōten, burdock tempura)",
+  ],
+  [
+    "博多焼き鳥",
+    "Hakata yakitori",
+    "Hakata yakitori",
+    "Start with 豚バラ (butabara, pork belly); the cabbage plate is free",
+  ],
+  ["梅ヶ枝餅", "umegae mochi", "Grilled red-bean mochi", "Dazaifu (太宰府)"],
 ]);
 
 export const himeji = phraseDeck("himeji", [
-  ["姫路おでん", "Himeji oden", "Eaten with 生姜醤油 (shōga jōyu, ginger soy) rather than mustard"],
-  ["駅そば", "ekisoba", "Yellow Chinese-style noodles in dashi at the station. Weirdly good, a 70-year-old local ritual"],
-  ["穴子", "anago", "播磨灘 (Harima-nada) conger eel, grilled over rice"],
-  ["酢味噌の餃子", "sumiso no gyōza", "Gyoza with vinegar-miso dip, a Himeji quirk"],
-  ["揖保乃糸そうめん", "Ibo-no-Ito sōmen", "From nearby たつの (Tatsuno)"],
-  ["牡蠣", "kaki", "Oysters 【秋】Harima-nada season starts in October, may just catch it"],
-]);
-
-export const tokyoReturn = phraseDeck("tokyo-return", [
-  ["松茸", "matsutake", "Pine mushroom, in 土瓶蒸し (dobin-mushi)"],
-  ["栗菓子", "kurigashi", "Chestnut sweets"],
-  ["新米", "shinmai", "New-crop rice, on menus from mid-October"],
+  [
+    "姫路おでん",
+    "Himeji oden",
+    "Himeji oden",
+    "Eaten with 生姜醤油 (shōga jōyu, ginger soy) rather than mustard",
+  ],
+  [
+    "駅そば",
+    "ekisoba",
+    "Station soba",
+    "Yellow Chinese-style noodles in dashi, sold at station platform stands",
+  ],
+  ["穴子", "anago", "Conger eel", "播磨灘 (Harima-nada), grilled over rice"],
+  ["酢味噌の餃子", "sumiso no gyōza", "Gyoza with vinegar-miso dip"],
+  ["揖保乃糸そうめん", "Ibo-no-Ito sōmen", "Ibo-no-Ito somen", "From nearby たつの (Tatsuno)"],
+  ["牡蠣", "kaki", "Oysters", "【秋】 Harima-nada season starts in October"],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -849,12 +1049,12 @@ export const decks: Deck[] = [
     cards: dessert,
   },
   {
-    id: "tokyo-arrival",
+    id: "tokyo",
     group: "Regional Delicacies",
-    label: "Tokyo (Arrival)",
+    label: "Tokyo",
     subtitle: "Regional Delicacies",
     color: "text-purple-400",
-    cards: tokyoArrival,
+    cards: tokyo,
   },
   {
     id: "yokohama",
@@ -919,14 +1119,6 @@ export const decks: Deck[] = [
     subtitle: "Regional Delicacies",
     color: "text-purple-400",
     cards: himeji,
-  },
-  {
-    id: "tokyo-return",
-    group: "Regional Delicacies",
-    label: "Tokyo (Return)",
-    subtitle: "Regional Delicacies",
-    color: "text-purple-400",
-    cards: tokyoReturn,
   },
 ];
 

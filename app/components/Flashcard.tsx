@@ -157,9 +157,16 @@ export default function Flashcard({
   );
 
   const englishBlock = (
-    <span className="px-6 text-center text-3xl sm:text-4xl font-semibold text-white leading-snug">
-      {card.english}
-    </span>
+    <>
+      <span className="px-6 text-center text-3xl sm:text-4xl font-semibold text-white leading-snug">
+        {card.english}
+      </span>
+      {card.detail && (
+        <span className="mt-3 px-6 text-center text-sm sm:text-base font-normal text-white/60 leading-snug">
+          {card.detail}
+        </span>
+      )}
+    </>
   );
 
   const kanaBackBlock = (

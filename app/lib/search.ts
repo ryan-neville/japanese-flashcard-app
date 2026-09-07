@@ -61,5 +61,6 @@ export function parseQuery(raw: string): PhraseQuery | null {
 /** True when the card matches on its English meaning or its romaji reading. */
 export function matchesQuery(card: Flashcard, query: PhraseQuery): boolean {
   if ((card.english ?? "").toLowerCase().includes(query.english)) return true;
+  if ((card.detail ?? "").toLowerCase().includes(query.english)) return true;
   return query.romaji !== "" && normalizeCached(card.romaji).includes(query.romaji);
 }
