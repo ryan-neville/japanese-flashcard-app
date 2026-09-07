@@ -63,9 +63,12 @@ function PhraseText({ card }: { card: Flashcard }) {
         <p className="text-xl text-white font-light leading-snug break-words">{card.japanese}</p>
         <p className="text-sm text-white/60 break-words">{card.romaji}</p>
       </div>
-      <p className="text-sm sm:text-base text-white/80 break-words sm:shrink-0 sm:max-w-[45%] sm:text-right">
-        {card.english}
-      </p>
+      <div className="sm:shrink-0 sm:max-w-[45%] sm:text-right">
+        <p className="text-sm sm:text-base text-white/80 break-words">{card.english}</p>
+        {card.detail && (
+          <p className="text-xs text-white/50 break-words mt-0.5">{card.detail}</p>
+        )}
+      </div>
     </div>
   );
 }
