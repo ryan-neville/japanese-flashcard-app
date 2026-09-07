@@ -4,10 +4,16 @@ An interactive flashcard app for memorizing Japanese hiragana, katakana, and tra
 
 ## Features
 
-- **412 cards across 20 decks** — 208 kana characters plus 204 phrases
+- **500 cards across 29 decks** — 208 kana characters plus 292 phrases
 - **Kana decks** — 104 hiragana and 104 katakana, covering all base characters and consonant combinations (kya, gyu, sho, etc.)
-- **Travel Phrasebook** — Greetings & Basics, Getting Around, Dining, Shopping, Hotel, Emergencies & Health, Useful Everyday Phrases, Numbers
+- **Travel Phrasebook** — Greetings & Basics, Getting Around, Dining, Shopping, Hotel, Emergencies & Health, Useful Everyday Phrases, Numbers (including common counters like つ, 泊, and 階)
 - **Menu Guide** — Alcoholic & Non-Alcoholic Drinks, Appetizers & Sides, Sushi & Sashimi, Noodles, Rice Dishes, Grilled & Fried Mains, Hot Pot & Stews, Soups, Dessert
+- **Regional Delicacies** — local dishes for Tokyo, Yokohama, Osaka, Nagasaki, Kumamoto, Kitakyushu, Oita, Fukuoka, and Himeji
+- **Dedicated Phrasebook page** — browse and search the Travel Phrasebook, Menu Guide, and Regional Delicacies independently of the flashcard deck, with your section remembered across visits
+- **My List** — star any card from Kana, Travel Phrasebook, or Menu Guide into one cross-deck, persistent list; reorder it by drag-and-drop on the Phrasebook page, and study it directly with Flashcards' Shuffle/Restart controls
+- **English-first toggle** — swap which face of a phrase card shows first
+- **Phrase search** — filter the Phrasebook by English meaning or romaji reading
+- **Bookmarkable state** — the selected deck and Phrasebook section are synced to the URL (with a localStorage fallback), so switching pages never loses your place
 - **3D flip animation** — click or tap a card to reveal the answer
 - **Two card styles** — kana cards show the character and flip to reveal romaji; phrase cards show Japanese *and* romaji together, flipping to reveal the English translation
 - **Swipe navigation** — swipe left/right on mobile to move through the deck
@@ -21,6 +27,7 @@ An interactive flashcard app for memorizing Japanese hiragana, katakana, and tra
 - React 19
 - Tailwind CSS 4
 - TypeScript
+- [dnd-kit](https://dndkit.com) for My List drag-and-drop reordering
 
 ## Getting Started
 
@@ -53,11 +60,23 @@ If the phone still can't connect, check in this order: the server is actually ru
 app/
   page.tsx              # Main flashcard UI and deck selection state
   layout.tsx            # Root layout and font setup
+  phrasebook/
+    page.tsx            # Standalone Phrasebook page (search, My List, drag-to-reorder)
   data/
     flashcards.ts       # All card data, deck registry, and types
+    audio-manifest.ts   # Generated lookup from card text to its audio clip
   components/
     Flashcard.tsx       # Card component with flip animation
-    DeckControls.tsx    # Deck picker, shuffle, restart
+    DeckControls.tsx    # Deck picker, shuffle, restart, English-first toggle
+    PhraseList.tsx      # Phrasebook list, search, star/My List, drag-to-reorder
+    HiddenCards.tsx     # UI for cards hidden from the active deck
+    SpeakButton.tsx     # Plays a card's pronunciation clip
+    AppLink.tsx         # Link wrapper that preserves URL state across pages
+  lib/
+    progress.ts         # Persists deck/index/order/My List/English-first state
+    section.ts          # Persists the active Phrasebook section
+    search.ts           # English/romaji query matching for the Phrasebook
+    speech.ts           # Web Speech API fallback for text with no clip
 ```
 
 ### Adding a deck
