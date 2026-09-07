@@ -3,7 +3,9 @@ name: Release and sync portfolio submodule
 # Triggers once a PR is merged into main. Two jobs:
 #   1. release            - bump package.json (conventional commits), tag, push, create GitHub Release
 #   2. update-portfolio   - update the japanese-flashcard-app submodule in rn-portfolio to the new tag,
-#                           open a PR there, and enable auto-merge
+#                           open a PR there, enable auto-merge, then once that PR merges, bump
+#                           rn-portfolio's own package.json to match the same tag, commit it to
+#                           main, and tag + release rn-portfolio
 #
 # Required repo secrets (set on japanese-flashcard-app):
 #   PORTFOLIO_REPO_TOKEN - PAT (classic "repo" scope, or fine-grained with
@@ -147,3 +149,48 @@ jobs:
             --repo ryan-neville/rn-portfolio \
             --squash \
             --auto
+
+      - name: Wait for PR to be merged
+        if: env.SKIP != 'true'
+        run: |
+          for i in $(seq 1 40); do
+            STATE=$(gh pr view "feature/flashcard-app-${NEW_TAG}" --repo ryan-neville/rn-portfolio --json state -q .state)
+            if [ "$STATE" = "MERGED" ]; then
+              echo "PR merged."
+              exit 0
+            fi
+            echo "PR state: $STATE (attempt $i/40), waiting 15s..."
+            sleep 15
+          done
+          echo "::error::Timed out waiting for feature/flashcard-app-${NEW_TAG} to merge." >&2
+          exit 1
+
+      - name: Set up Node
+        if: env.SKIP != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Sync main and bump rn-portfolio version to match submodule tag
+        if: env.SKIP != 'true'
+        run: |
+          git checkout main
+          git pull origin main
+          npm version "$NEW_TAG" --no-git-tag-version --allow-same-version
+
+      - name: Commit, tag, and push version bump
+        if: env.SKIP != 'true'
+        run: |
+          git add package.json package-lock.json
+          git commit -m "chore(release): ${NEW_TAG}"
+          git tag "${NEW_TAG}"
+          git push origin main
+          git push origin "${NEW_TAG}"
+
+      - name: Create GitHub release for rn-portfolio
+        if: env.SKIP != 'true'
+        run: |
+          gh release create "${NEW_TAG}" \
+            --repo ryan-neville/rn-portfolio \
+            --title "${NEW_TAG}" \
+            --generate-notes
