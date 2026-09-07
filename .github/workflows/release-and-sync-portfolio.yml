@@ -74,6 +74,9 @@ jobs:
             --title "${{ steps.bump.outputs.new_tag }}" \
             --generate-notes
 
+      - name: Wait for Vercel build
+        run: sleep 60
+
   update-portfolio:
     needs: release
     runs-on: ubuntu-latest
