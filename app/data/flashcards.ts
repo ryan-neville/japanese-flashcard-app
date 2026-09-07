@@ -22,7 +22,7 @@ export type PhraseSet =
   | "soups"
   | "dessert"
   // Regional Delicacies
-  | "tokyo-arrival"
+  | "tokyo"
   | "yokohama"
   | "osaka"
   | "nagasaki"
@@ -30,8 +30,7 @@ export type PhraseSet =
   | "kitakyushu"
   | "oita"
   | "fukuoka"
-  | "himeji"
-  | "tokyo-return";
+  | "himeji";
 
 export type CardSet = KanaSet | PhraseSet;
 
@@ -453,6 +452,7 @@ export const everyday = phraseDeck("everyday", [
 ]);
 
 export const numbers = phraseDeck("numbers", [
+  // Cardinal numbers
   ["一", "Ichi", "1"],
   ["二", "Ni", "2"],
   ["三", "San", "3"],
@@ -466,6 +466,37 @@ export const numbers = phraseDeck("numbers", [
   ["百", "Hyaku", "100"],
   ["千", "Sen", "1,000"],
   ["万", "Man", "10,000"],
+  // Counter: つ — generic objects, for anything with no specific counter
+  [
+    "一つ",
+    "Hitotsu",
+    "1 (general)",
+    "Generic counter for objects — used when no specific counter fits",
+  ],
+  ["二つ", "Futatsu", "2 (general)", "Generic counter for objects"],
+  ["三つ", "Mittsu", "3 (general)", "Generic counter for objects"],
+  ["四つ", "Yottsu", "4 (general)", "Generic counter for objects"],
+  ["五つ", "Itsutsu", "5 (general)", "Generic counter for objects"],
+  ["六つ", "Muttsu", "6 (general)", "Generic counter for objects"],
+  ["七つ", "Nanatsu", "7 (general)", "Generic counter for objects"],
+  ["八つ", "Yattsu", "8 (general)", "Generic counter for objects"],
+  ["九つ", "Kokonotsu", "9 (general)", "Generic counter for objects"],
+  [
+    "とお",
+    "Tou",
+    "10 (general)",
+    "Generic counter for objects — stops at 10; use plain numbers above that",
+  ],
+  // Counter: 泊 — nights spent somewhere, for booking a room
+  ["一泊", "Ippaku", "1 night", "Counter for nights staying somewhere"],
+  ["二泊", "Nihaku", "2 nights", "Counter for nights staying somewhere"],
+  ["三泊", "Sanpaku", "3 nights", "Counter for nights staying somewhere"],
+  // Counter: 階 — building floors
+  ["一階", "Ikkai", "1st floor", "Counter for building floors"],
+  ["二階", "Nikai", "2nd floor", "Counter for building floors"],
+  ["三階", "Sangai", "3rd floor", "Counter for building floors — irregular reading"],
+  ["四階", "Yonkai", "4th floor", "Counter for building floors"],
+  ["五階", "Gokai", "5th floor", "Counter for building floors"],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -600,7 +631,7 @@ export const dessert = phraseDeck("dessert", [
 // Regional Delicacies
 // ---------------------------------------------------------------------------
 
-export const tokyoArrival = phraseDeck("tokyo-arrival", [
+export const tokyo = phraseDeck("tokyo", [
   [
     "江戸前寿司",
     "Edomae zushi",
@@ -625,6 +656,9 @@ export const tokyoArrival = phraseDeck("tokyo-arrival", [
     "Fukagawa clam rice",
     "Clams (あさり, asari) and rice, an old 下町 (shitamachi) dish. Served either as a miso broth over rice or as 炊き込み (takikomi, cooked together)",
   ],
+  ["松茸", "matsutake", "Pine mushroom", "In 土瓶蒸し (dobin-mushi)"],
+  ["栗菓子", "kurigashi", "Chestnut sweets"],
+  ["新米", "shinmai", "New-crop rice", "On menus from mid-October"],
 ]);
 
 export const yokohama = phraseDeck("yokohama", [
@@ -837,12 +871,6 @@ export const himeji = phraseDeck("himeji", [
   ["牡蠣", "kaki", "Oysters", "【秋】 Harima-nada season starts in October"],
 ]);
 
-export const tokyoReturn = phraseDeck("tokyo-return", [
-  ["松茸", "matsutake", "Pine mushroom", "In 土瓶蒸し (dobin-mushi)"],
-  ["栗菓子", "kurigashi", "Chestnut sweets"],
-  ["新米", "shinmai", "New-crop rice", "On menus from mid-October"],
-]);
-
 // ---------------------------------------------------------------------------
 // Deck registry
 // ---------------------------------------------------------------------------
@@ -1021,12 +1049,12 @@ export const decks: Deck[] = [
     cards: dessert,
   },
   {
-    id: "tokyo-arrival",
+    id: "tokyo",
     group: "Regional Delicacies",
-    label: "Tokyo (Arrival)",
+    label: "Tokyo",
     subtitle: "Regional Delicacies",
     color: "text-purple-400",
-    cards: tokyoArrival,
+    cards: tokyo,
   },
   {
     id: "yokohama",
@@ -1091,14 +1119,6 @@ export const decks: Deck[] = [
     subtitle: "Regional Delicacies",
     color: "text-purple-400",
     cards: himeji,
-  },
-  {
-    id: "tokyo-return",
-    group: "Regional Delicacies",
-    label: "Tokyo (Return)",
-    subtitle: "Regional Delicacies",
-    color: "text-purple-400",
-    cards: tokyoReturn,
   },
 ];
 
