@@ -20,7 +20,18 @@ export type PhraseSet =
   | "grilled-fried"
   | "hot-pot"
   | "soups"
-  | "dessert";
+  | "dessert"
+  // Regional Delicacies
+  | "tokyo-arrival"
+  | "yokohama"
+  | "osaka"
+  | "nagasaki"
+  | "kumamoto"
+  | "kitakyushu"
+  | "oita"
+  | "fukuoka"
+  | "himeji"
+  | "tokyo-return";
 
 export type CardSet = KanaSet | PhraseSet;
 
@@ -569,10 +580,102 @@ export const dessert = phraseDeck("dessert", [
 ]);
 
 // ---------------------------------------------------------------------------
+// Regional Delicacies
+// ---------------------------------------------------------------------------
+
+export const tokyoArrival = phraseDeck("tokyo-arrival", [
+  ["江戸前寿司", "Edomae zushi", "Edomae sushi, the point of a Tokyo counter 【秋】秋刀魚 (sanma, Pacific saury), 小肌 (kohada, gizzard shad) at its best, early 黒鮪 (kuromaguro, bluefin)"],
+  ["もんじゃ焼き", "monjayaki", "Monjayaki. 月島西仲通り (Tsukishima Nishinaka-dōri) is lined with shops — the street is nicknamed もんじゃストリート"],
+  ["江戸前うなぎ", "Edomae unagi", "Steamed then grilled (蒸してから焼く), much softer than the Kansai style. 蒲焼 (kabayaki) over rice is 鰻重 (unajū)"],
+  ["深川めし", "Fukagawa-meshi", "Clams (あさり, asari) and rice, an old 下町 (shitamachi) dish. Served either as a miso broth over rice or as 炊き込み (takikomi, cooked together)"],
+]);
+
+export const yokohama = phraseDeck("yokohama", [
+  ["サンマーメン", "sanmāmen", "Sanmamen: thin noodles under a starchy pork-and-vegetable topping. Born in Chinatown (中華街, Chūkagai)"],
+  ["家系ラーメン", "iekei rāmen", '"House-lineage" ramen: pork-bone-and-soy, spinach and nori. Started here'],
+  ["崎陽軒のシウマイ", "Kiyōken no shiumai", "Kiyoken shumai. Note the brand deliberately spells it シウマイ, not シュウマイ. The station bento is シウマイ弁当 (shiumai bentō)"],
+  ["牛鍋", "gyūnabe", "Beef hotpot. 太田なわのれん (Ōta Nawanoren) still serves the original style"],
+  ["ナポリタン / ドリア", "naporitan / doria", "Ketchup spaghetti and baked rice gratin, both invented at ホテルニューグランド (Hoteru Nyū Gurando)"],
+]);
+
+export const osaka = phraseDeck("osaka", [
+  ["串カツ", "kushikatsu", "Skewered deep-fried cutlets, Shinsekai (新世界). The rule on the wall is 二度漬け禁止 (nidozuke kinshi) — no double dipping"],
+  ["きつねうどん", "kitsune udon", "Udon with sweet fried tofu. Invented at うさみ亭マツバヤ (Usami-tei Matsubaya)"],
+  ["どて焼き", "doteyaki", "Beef tendon simmered in sweet miso, best with beer"],
+  ["バッテラ / 箱寿司", "battera / hakozushi", "Pressed sushi, the older Osaka form"],
+  ["551蓬莱の豚まん", "go-go-ichi Hōrai no butaman", '551 Horai pork buns. The number is read "go-go-ichi"'],
+  ["てっちり", "tecchiri", "Fugu hotpot 【秋】season opens around October"],
+  ["ミックスジュース", "mikkusu jūsu", "Mixed fruit juice at a 喫茶店 (kissaten). Pairs with the coffee hunting"],
+]);
+
+export const nagasaki = phraseDeck("nagasaki", [
+  ["カステラ", "kasutera", "Castella sponge cake. 福砂屋 (Fukusaya) or 松翁軒 (Shōōken)"],
+  ["トルコライス", "Toruko raisu", '"Turkish rice": pilaf, spaghetti and a pork cutlet on one plate'],
+  ["卓袱料理", "shippoku ryōri", "Japanese-Chinese-Portuguese banquet cuisine. Needs a reservation, usually assumes 2+ people"],
+  ["ハトシ", "hatoshi", "Deep-fried shrimp toast (from Cantonese 蝦多士)"],
+  ["長崎茶碗蒸し", "Nagasaki chawanmushi", "Served huge, with udon in it"],
+  ["角煮まんじゅう", "kakuni manjū", "Braised pork belly in a steamed bun"],
+]);
+
+export const kumamoto = phraseDeck("kumamoto", [
+  ["馬刺し", "basashi", "Horse sashimi, the signature. Ask for 霜降り (shimofuri, fatty) or たてがみ (tategami, mane fat)"],
+  ["熊本ラーメン", "Kumamoto rāmen", "Tonkotsu with black garlic oil, マー油 (māyu)"],
+  ["辛子蓮根", "karashi renkon", "Mustard-stuffed lotus root, deep fried"],
+  ["太平燕", "taipīen", "Glass noodle soup, the local comfort dish"],
+  ["いきなり団子", "ikinari dango", "Sweet potato and anko dumpling"],
+  ["あか牛", "akaushi", "Red wagyu, leaner than typical wagyu"],
+  ["球磨焼酎", "Kuma shōchū", "Rice shochu, protected designation"],
+]);
+
+export const kitakyushu = phraseDeck("kitakyushu", [
+  ["焼きカレー", "yaki karē", "Baked curry with cheese and egg. Mojiko's dish; a strip of shops near the retro waterfront"],
+  ["小倉焼うどん", "Kokura yakiudon", "Where yakiudon was invented, made with dried noodles (干麺, kanmen)"],
+  ["ぬか炊き", "nukadaki", "Sardines or mackerel simmered in fermented rice bran (ぬか床, nukadoko). Old Kokura preservation dish"],
+  ["ふぐ／ふく", "fugu / fuku", "関門海峡 (Kanmon kaikyō) is fugu country. In Shimonoseki it's called ふく, a pun on 福 (luck). 唐戸市場 (Karato ichiba) is a short hop across"],
+  ["旦過市場", "Tanga ichiba", "For 海鮮丼 (kaisendon), or the make-your-own 大學丼 (daigaku-don) at 大學堂"],
+]);
+
+export const oita = phraseDeck("oita", [
+  ["とり天", "toriten", "Chicken tempura with ponzu, the prefectural dish"],
+  ["中津からあげ", "Nakatsu karaage", "Karaage capital of Japan, if you get near Nakatsu"],
+  ["地獄蒸し", "jigoku-mushi", '"Hell-steamed" food cooked over the hot springs; do it yourself in 鉄輪 (Kannawa)'],
+  ["だんご汁 / やせうま", "dangojiru / yaseuma", "Same flat wheat noodle: once as savoury soup, once dusted with きな粉 (kinako) as a sweet"],
+  ["りゅうきゅう", "ryūkyū", "Fish marinated in soy, sesame and mirin, over rice"],
+  ["関あじ / 関さば", "seki-aji / seki-saba", "Premium horse mackerel and mackerel from 佐賀関 (Saganoseki), good enough raw"],
+  ["かぼす", "kabosu", "Citrus 【秋】peak season exactly when you're there. Goes on everything"],
+  ["Bスピークのロールケーキ", "Bī-supīku no rōru kēki", "B-speak roll cake, Yufuin"],
+]);
+
+export const fukuoka = phraseDeck("fukuoka", [
+  ["博多豚骨ラーメン", "Hakata tonkotsu rāmen", "Thin noodles; order 替え玉 (kaedama, noodle refill). Hardness is 麺の固さ — バリカタ (barikata) is the standard ask"],
+  ["水炊き", "mizutaki", "Chicken hotpot, completely different animal from motsunabe"],
+  ["明太子", "mentaiko", "Spicy pollock roe. As 明太子入り卵焼き (mentaiko-iri tamagoyaki) or over rice. Best souvenir of the trip"],
+  ["ごまさば", "gomasaba", "Raw mackerel in sesame soy, a 屋台 (yatai) classic"],
+  ["博多うどん", "Hakata udon", "Deliberately soft noodles with ごぼう天 (gobōten, burdock tempura)"],
+  ["博多焼き鳥", "Hakata yakitori", "Start with 豚バラ (butabara, pork belly); the cabbage plate is free"],
+  ["梅ヶ枝餅", "umegae mochi", "Grilled red-bean mochi, Dazaifu (太宰府)"],
+]);
+
+export const himeji = phraseDeck("himeji", [
+  ["姫路おでん", "Himeji oden", "Eaten with 生姜醤油 (shōga jōyu, ginger soy) rather than mustard"],
+  ["駅そば", "ekisoba", "Yellow Chinese-style noodles in dashi at the station. Weirdly good, a 70-year-old local ritual"],
+  ["穴子", "anago", "播磨灘 (Harima-nada) conger eel, grilled over rice"],
+  ["酢味噌の餃子", "sumiso no gyōza", "Gyoza with vinegar-miso dip, a Himeji quirk"],
+  ["揖保乃糸そうめん", "Ibo-no-Ito sōmen", "From nearby たつの (Tatsuno)"],
+  ["牡蠣", "kaki", "Oysters 【秋】Harima-nada season starts in October, may just catch it"],
+]);
+
+export const tokyoReturn = phraseDeck("tokyo-return", [
+  ["松茸", "matsutake", "Pine mushroom, in 土瓶蒸し (dobin-mushi)"],
+  ["栗菓子", "kurigashi", "Chestnut sweets"],
+  ["新米", "shinmai", "New-crop rice, on menus from mid-October"],
+]);
+
+// ---------------------------------------------------------------------------
 // Deck registry
 // ---------------------------------------------------------------------------
 
-export type DeckGroup = "Kana" | "Travel Phrasebook" | "Menu Guide";
+export type DeckGroup = "Kana" | "Travel Phrasebook" | "Menu Guide" | "Regional Delicacies";
 
 export interface Deck {
   id: CardSet;
@@ -745,11 +848,91 @@ export const decks: Deck[] = [
     color: "text-emerald-400",
     cards: dessert,
   },
+  {
+    id: "tokyo-arrival",
+    group: "Regional Delicacies",
+    label: "Tokyo (Arrival)",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: tokyoArrival,
+  },
+  {
+    id: "yokohama",
+    group: "Regional Delicacies",
+    label: "Yokohama",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: yokohama,
+  },
+  {
+    id: "osaka",
+    group: "Regional Delicacies",
+    label: "Osaka",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: osaka,
+  },
+  {
+    id: "nagasaki",
+    group: "Regional Delicacies",
+    label: "Nagasaki",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: nagasaki,
+  },
+  {
+    id: "kumamoto",
+    group: "Regional Delicacies",
+    label: "Kumamoto",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: kumamoto,
+  },
+  {
+    id: "kitakyushu",
+    group: "Regional Delicacies",
+    label: "Kitakyushu (Kokura / Mojiko)",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: kitakyushu,
+  },
+  {
+    id: "oita",
+    group: "Regional Delicacies",
+    label: "Oita (Beppu / Yufuin)",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: oita,
+  },
+  {
+    id: "fukuoka",
+    group: "Regional Delicacies",
+    label: "Fukuoka (Hakata)",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: fukuoka,
+  },
+  {
+    id: "himeji",
+    group: "Regional Delicacies",
+    label: "Himeji",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: himeji,
+  },
+  {
+    id: "tokyo-return",
+    group: "Regional Delicacies",
+    label: "Tokyo (Return)",
+    subtitle: "Regional Delicacies",
+    color: "text-purple-400",
+    cards: tokyoReturn,
+  },
 ];
 
 export const deckById = new Map<CardSet, Deck>(decks.map((d) => [d.id, d]));
 
-export const deckGroups: DeckGroup[] = ["Kana", "Travel Phrasebook", "Menu Guide"];
+export const deckGroups: DeckGroup[] = ["Kana", "Travel Phrasebook", "Menu Guide", "Regional Delicacies"];
 
 /**
  * Stable identity for a card. Positions shift when a deck is edited, so hidden
