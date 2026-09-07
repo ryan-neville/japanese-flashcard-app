@@ -74,9 +74,6 @@ jobs:
             --title "${{ steps.bump.outputs.new_tag }}" \
             --generate-notes
 
-      - name: Wait for Vercel build
-        run: sleep 60
-
   update-portfolio:
     needs: release
     runs-on: ubuntu-latest
@@ -139,6 +136,9 @@ jobs:
             --head "feature/flashcard-app-${NEW_TAG}" \
             --title "chore: bump japanese-flashcard-app submodule to ${NEW_TAG}" \
             --body "Automated update of the \`japanese-flashcard-app\` submodule to [\`${NEW_TAG}\`](https://github.com/ryan-neville/japanese-flashcard-app/releases/tag/${NEW_TAG})."
+
+      - name: Wait for Vercel build
+        run: sleep 60
 
       - name: Enable auto-merge
         if: env.SKIP != 'true'
