@@ -22,6 +22,8 @@ export interface Progress {
   custom: string[];
   /** Shows the English side of a phrase card before the Japanese side. */
   englishFirst: boolean;
+  /** Pronunciation playback speed, as a fraction of normal speed (1 = normal). */
+  playbackRate: number;
 }
 
 export const DEFAULT_PROGRESS: Progress = {
@@ -31,7 +33,21 @@ export const DEFAULT_PROGRESS: Progress = {
   hidden: [],
   custom: [],
   englishFirst: false,
+  playbackRate: 1,
 };
+
+/** The slowest and fastest pace the playback speed control allows. */
+export const MIN_PLAYBACK_RATE = 0.25;
+export const MAX_PLAYBACK_RATE = 1;
+
+function isPlaybackRate(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= MIN_PLAYBACK_RATE &&
+    value <= MAX_PLAYBACK_RATE
+  );
+}
 
 export function isMode(value: unknown): value is Mode {
   return (
@@ -62,7 +78,8 @@ function parse(raw: string): Progress {
     return DEFAULT_PROGRESS;
   }
   if (typeof parsed !== "object" || parsed === null) return DEFAULT_PROGRESS;
-  const { mode, index, order, hidden, custom, englishFirst } = parsed as Record<string, unknown>;
+  const { mode, index, order, hidden, custom, englishFirst, playbackRate } =
+    parsed as Record<string, unknown>;
   return {
     mode: isMode(mode) ? mode : DEFAULT_PROGRESS.mode,
     index: Number.isInteger(index) && (index as number) >= 0 ? (index as number) : 0,
@@ -70,6 +87,7 @@ function parse(raw: string): Progress {
     hidden: Array.isArray(hidden) ? hidden.filter((k): k is string => typeof k === "string") : [],
     custom: Array.isArray(custom) ? custom.filter((k): k is string => typeof k === "string") : [],
     englishFirst: typeof englishFirst === "boolean" ? englishFirst : DEFAULT_PROGRESS.englishFirst,
+    playbackRate: isPlaybackRate(playbackRate) ? playbackRate : DEFAULT_PROGRESS.playbackRate,
   };
 }
 

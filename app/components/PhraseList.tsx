@@ -38,6 +38,7 @@ import {
 } from "../lib/progress";
 import { getSection, getServerSection, saveSection, subscribeSection } from "../lib/section";
 import { matchesQuery, parseQuery } from "../lib/search";
+import PlaybackSpeedControl from "./PlaybackSpeedControl";
 import SpeakButton from "./SpeakButton";
 
 /** Every phrase deck, in registry order — the sections offered in the menu. */
@@ -271,6 +272,8 @@ export default function PhraseList() {
         aria-label="Search phrases by English meaning or romaji"
         className="min-h-[44px] w-72 sm:w-96 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 touch-manipulation"
       />
+
+      <PlaybackSpeedControl />
 
       <p className="text-white/50 text-sm" aria-live="polite">
         {total} {total === 1 ? "phrase" : "phrases"}
