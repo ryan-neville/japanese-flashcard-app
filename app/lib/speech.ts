@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { audioClips } from "../data/audio-manifest";
+import { getSnapshot as getProgress } from "./progress";
 
 /**
  * Japanese pronunciation, from a bundled clip where we have one and the Web
@@ -33,8 +34,43 @@ export interface SpeechState {
 /** BCP-47 tags for Japanese: "ja", "ja-JP", and the odd "ja_JP" from Android. */
 const JA = /^ja([-_]|$)/i;
 
-/** A learner-friendly pace — full speed clips the ends of short phrases. */
-const RATE = 0.85;
+/**
+ * A learner-friendly pace — full speed clips the ends of short phrases. This is
+ * the Web Speech fallback's baseline; the user's own speed control (see
+ * `progress.ts`'s `playbackRate`) then scales it further, same as it scales the
+ * bundled clips. At the control's default (100%) this reproduces the pace this
+ * app has always spoken the fallback at.
+ */
+const FALLBACK_BASE_RATE = 0.85;
+
+/**
+ * Slowing audio down should not deepen its pitch — that is not how a native
+ * speaker actually sounds slower, and it defeats the point of a control meant
+ * to help pronunciation. `preservesPitch` already defaults to true in every
+ * current engine, but it is set explicitly (with its old vendor-prefixed
+ * names, harmless to set even where unsupported) so a slowed clip never
+ * depends on an engine's default happening to still be true.
+ */
+interface VendorPitch {
+  webkitPreservesPitch?: boolean;
+  mozPreservesPitch?: boolean;
+}
+
+function setClipRate(el: HTMLAudioElement, rate: number): void {
+  el.playbackRate = rate;
+  // Some mobile engines expose these as read-only, which throws on assignment
+  // in strict mode (every module here is strict). Losing pitch preservation is
+  // a nicety to give up; losing playback entirely — which an uncaught throw
+  // here would do, since it runs before `play()` — is not.
+  try {
+    el.preservesPitch = true;
+    const vendor = el as unknown as VendorPitch;
+    vendor.webkitPreservesPitch = true;
+    vendor.mozPreservesPitch = true;
+  } catch {
+    // Clip still plays; it just may not hold pitch on this engine.
+  }
+}
 
 /** Where `scripts/generate-audio.py` writes its clips, under `public/`. */
 const CLIP_BASE = "/audio/ja/";
@@ -219,6 +255,7 @@ function playClip(text: string, key: string): boolean {
   if (typeof window === "undefined" || typeof window.Audio !== "function") return false;
 
   const el = new window.Audio(`${CLIP_BASE}${audioClips[text]}.mp3`);
+  setClipRate(el, getProgress().playbackRate);
 
   const finish = () => {
     if (clip !== el) return;
@@ -260,7 +297,7 @@ function speakWithVoice(text: string, key: string): void {
   // engine to choose a Japanese one once it has loaded them.
   if (voice) next.voice = voice;
   next.lang = voice?.lang ?? "ja-JP";
-  next.rate = RATE;
+  next.rate = FALLBACK_BASE_RATE * getProgress().playbackRate;
 
   const finish = () => {
     if (utterance !== next) return;

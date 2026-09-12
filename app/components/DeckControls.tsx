@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { decks, deckGroups, type CardSet, type DeckGroup } from "../data/flashcards";
+import PlaybackSpeedControl from "./PlaybackSpeedControl";
 
 /** A deck id, the virtual deck that merges both kana sets, or the user's custom list. */
 export type Mode = CardSet | "kana-both" | "custom";
@@ -77,6 +78,8 @@ export default function DeckControls({
         />
         English first
       </label>
+
+      <PlaybackSpeedControl />
 
       {/* Actions */}
       <div className="flex flex-wrap justify-center gap-3">
