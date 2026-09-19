@@ -338,8 +338,13 @@ export const greetings = phraseDeck("greetings", [
   ["はじめまして", "Hajimemashite", "Nice to meet you"],
   ["私は＿＿＿です", "Watashi wa ___ desu", "My name is ___"],
   ["わかりません", "Wakarimasen", "I don't understand"],
+  ["わかりました", "Wakarimashita", "I understand / Got it"],
   ["英語を話せますか?", "Eigo o hanasemasu ka?", "Do you speak English?"],
   ["日本語があまりわかりません", "Nihongo ga amari wakarimasen", "I don't speak Japanese well"],
+  ["いえいえ", "Ie ie", "No, no. / Not at all."],
+  ["いえいえ、まだまだです", "Ie ie, mada mada desu", "Oh no, I still have a long way to go."],
+  ["いえいえ、大丈夫ですよ", "Ie ie, daijōbu desu yo", "No, no, it's totally fine."],
+  ["とんでもないです", "Tondemonai desu", "It was nothing at all. / Not at all."],
 ]);
 
 export const gettingAround = phraseDeck("getting-around", [
