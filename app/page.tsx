@@ -12,6 +12,7 @@ import {
 import AppLink from "./components/AppLink";
 import Flashcard from "./components/Flashcard";
 import HiddenCards from "./components/HiddenCards";
+import SettingsTransfer from "./components/SettingsTransfer";
 import DeckControls, { type Mode } from "./components/DeckControls";
 import {
   cardKey,
@@ -248,6 +249,8 @@ function FlashcardsView() {
         onUnhide={handleUnhide}
         onUnhideAll={handleUnhideDeck}
       />
+
+      <SettingsTransfer />
 
       {deck.length > 0 && cardIndex === deck.length - 1 && (
         <div className="text-white/60 text-sm animate-pulse">
