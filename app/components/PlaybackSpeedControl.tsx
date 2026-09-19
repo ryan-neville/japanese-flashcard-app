@@ -27,7 +27,7 @@ export default function PlaybackSpeedControl() {
   const percent = Math.round(playbackRate * 100);
 
   return (
-    <div className="flex items-center gap-3 min-h-[44px] w-72 sm:w-96 text-sm text-white/70">
+    <div className="flex items-center gap-3 min-h-[44px] w-full text-sm text-white/70">
       <label htmlFor="playback-speed" className="shrink-0">
         Speed
       </label>
