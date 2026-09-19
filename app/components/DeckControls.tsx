@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { decks, deckGroups, type CardSet, type DeckGroup } from "../data/flashcards";
 import PlaybackSpeedControl from "./PlaybackSpeedControl";
+import SettingsTransfer from "./SettingsTransfer";
 
 /** A deck id, the virtual deck that merges both kana sets, or the user's custom list. */
 export type Mode = CardSet | "kana-both" | "custom";
@@ -122,6 +123,8 @@ export default function DeckControls({
           </button>
         )}
       </div>
+
+      <SettingsTransfer />
     </div>
   );
 }

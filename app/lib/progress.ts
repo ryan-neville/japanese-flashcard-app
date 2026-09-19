@@ -69,15 +69,17 @@ export function toggleStar(current: string[], card: Flashcard): string[] {
   return toggleCustomKey(current, cardKey(card));
 }
 
-/** Reads stored progress, keeping only the fields that still make sense. */
-function parse(raw: string): Progress {
+/** Validates and sanitizes a JSON blob into a `Progress`, or `null` if the
+ * text isn't valid JSON for an object at all — used to tell a corrupt/foreign
+ * import file apart from one that's merely missing some fields. */
+function tryParse(raw: string): Progress | null {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return DEFAULT_PROGRESS;
+    return null;
   }
-  if (typeof parsed !== "object" || parsed === null) return DEFAULT_PROGRESS;
+  if (typeof parsed !== "object" || parsed === null) return null;
   const { mode, index, order, hidden, custom, englishFirst, playbackRate } =
     parsed as Record<string, unknown>;
   return {
@@ -89,6 +91,11 @@ function parse(raw: string): Progress {
     englishFirst: typeof englishFirst === "boolean" ? englishFirst : DEFAULT_PROGRESS.englishFirst,
     playbackRate: isPlaybackRate(playbackRate) ? playbackRate : DEFAULT_PROGRESS.playbackRate,
   };
+}
+
+/** Reads stored progress, keeping only the fields that still make sense. */
+function parse(raw: string): Progress {
+  return tryParse(raw) ?? DEFAULT_PROGRESS;
 }
 
 // getSnapshot must return the same object while the underlying data is
@@ -132,6 +139,26 @@ export function saveProgress(patch: Partial<Progress>): void {
     // Storage full or blocked: progress just won't survive the refresh.
   }
   for (const listener of listeners) listener();
+}
+
+/** Serializes the current settings so they can be moved to another browser. */
+export function exportProgress(): string {
+  return JSON.stringify(getSnapshot(), null, 2);
+}
+
+/** Restores settings from a blob produced by `exportProgress`, replacing
+ * whatever is currently stored. Returns `false` (and leaves storage
+ * untouched) if `raw` isn't a recognizable settings export. */
+export function importProgress(raw: string): boolean {
+  const next = tryParse(raw);
+  if (!next) return false;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    return false;
+  }
+  for (const listener of listeners) listener();
+  return true;
 }
 
 /** Forgets every saved preference — deck, position, shuffle order and hidden cards. */
