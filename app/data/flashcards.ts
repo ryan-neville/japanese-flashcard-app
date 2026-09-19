@@ -398,7 +398,7 @@ export const dining = phraseDeck("dining", [
   ["熱い", "Atsui", "Hot (temperature)"],
   ["冷たい", "Tsumetai", "Cold (drink/food)"],
   ["とりあえずビールお願いします", "Toriaezu biiru onegaishimasu", "Beer first, please."],
-  ["とりあえず生でお願いします", "Toriaezu nama de onegaishimasu", "Draft beer first, please."],
+  ["とりあえずなまでお願いします", "Toriaezu nama de onegaishimasu", "Draft beer first, please."],
 ]);
 
 export const shopping = phraseDeck("shopping", [
