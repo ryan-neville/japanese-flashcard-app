@@ -45,12 +45,12 @@ export default function DeckControls({
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-stretch gap-4">
       {/* Deck selector */}
       <select
         value={mode}
         onChange={(e) => onModeChange(e.target.value as Mode)}
-        className="min-h-[44px] w-72 sm:w-96 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 touch-manipulation"
+        className="min-h-[44px] w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/40 touch-manipulation"
         aria-label="Choose a deck"
       >
         <optgroup label="My List" className="text-gray-900">
@@ -69,7 +69,7 @@ export default function DeckControls({
         ))}
       </select>
 
-      <label className="flex items-center gap-2 min-h-[44px] text-sm text-white/70 select-none cursor-pointer touch-manipulation">
+      <label className="flex items-center justify-center gap-2 min-h-[44px] text-sm text-white/70 select-none cursor-pointer touch-manipulation">
         <input
           type="checkbox"
           checked={englishFirst}

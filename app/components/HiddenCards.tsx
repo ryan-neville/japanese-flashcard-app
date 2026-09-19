@@ -19,7 +19,7 @@ export default function HiddenCards({ cards, otherCount, onUnhide, onUnhideAll }
   if (cards.length === 0 && otherCount === 0) return null;
 
   return (
-    <div className="w-72 sm:w-96 flex flex-col items-center gap-3">
+    <div className="w-full flex flex-col items-stretch gap-3">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}

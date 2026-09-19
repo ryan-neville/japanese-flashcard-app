@@ -80,7 +80,7 @@ export default function ControlsMenu(props: Props) {
             aria-label="Deck and settings menu"
             tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:w-96 sm:mx-4 max-h-[85vh] sm:max-h-[80vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/20 bg-slate-900 shadow-2xl flex flex-col items-center gap-6 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] focus:outline-none"
+            className="w-full sm:w-96 sm:mx-4 max-h-[85vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden rounded-t-3xl sm:rounded-3xl border border-white/20 bg-slate-900 shadow-2xl flex flex-col items-stretch gap-6 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] focus:outline-none"
           >
             <div className="w-full flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">Menu</h2>
