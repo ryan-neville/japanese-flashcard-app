@@ -11,9 +11,8 @@ import {
 } from "./data/flashcards";
 import AppLink from "./components/AppLink";
 import Flashcard from "./components/Flashcard";
-import HiddenCards from "./components/HiddenCards";
-import SettingsTransfer from "./components/SettingsTransfer";
-import DeckControls, { type Mode } from "./components/DeckControls";
+import ControlsMenu from "./components/ControlsMenu";
+import { type Mode } from "./components/DeckControls";
 import {
   cardKey,
   clearProgress,
@@ -211,7 +210,7 @@ function FlashcardsView() {
         Phrasebook →
       </AppLink>
 
-      <DeckControls
+      <ControlsMenu
         mode={mode}
         onModeChange={handleModeChange}
         onShuffle={handleShuffle}
@@ -220,6 +219,10 @@ function FlashcardsView() {
         customCount={custom.length}
         englishFirst={englishFirst}
         onToggleEnglishFirst={handleToggleEnglishFirst}
+        hiddenCards={hiddenInDeck}
+        otherHiddenCount={hidden.length - hiddenInDeck.length}
+        onUnhide={handleUnhide}
+        onUnhideAll={handleUnhideDeck}
       />
 
       {card ? (
@@ -239,18 +242,9 @@ function FlashcardsView() {
         <p className="text-white/60 text-sm text-center max-w-xs">
           {mode === "custom" && customCards.length === 0
             ? "Your list is empty. Star cards while studying or browsing the phrasebook to add them here."
-            : "Every card in this set is hidden. Unhide one below, or pick another set."}
+            : "Every card in this set is hidden. Unhide one from the menu, or pick another set."}
         </p>
       )}
-
-      <HiddenCards
-        cards={hiddenInDeck}
-        otherCount={hidden.length - hiddenInDeck.length}
-        onUnhide={handleUnhide}
-        onUnhideAll={handleUnhideDeck}
-      />
-
-      <SettingsTransfer />
 
       {deck.length > 0 && cardIndex === deck.length - 1 && (
         <div className="text-white/60 text-sm animate-pulse">
